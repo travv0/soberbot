@@ -17,7 +17,7 @@ namespace DiscordBot.Services
             _context.Database.EnsureCreated();
         }
 
-        public void SetDate(ulong serverId, ulong userId, DateTime soberDate)
+        public void SetDate(ulong serverId, ulong userId, string userName, DateTime soberDate)
         {
             var existingRecord = _context.Sobrieties
                 .FirstOrDefault(s => s.ServerID == serverId && s.UserID == userId);
@@ -28,12 +28,14 @@ namespace DiscordBot.Services
                 {
                     ServerID = serverId,
                     UserID = userId,
-                    SobrietyDate = soberDate
+                    UserName = userName,
+                    SobrietyDate = soberDate,
                 });
             }
             else
             {
                 existingRecord.SobrietyDate = soberDate;
+                existingRecord.UserName = userName;
                 _context.Sobrieties.Update(existingRecord);
             }
 
@@ -45,11 +47,10 @@ namespace DiscordBot.Services
             return _context.Sobrieties.Where(s => s.ServerID == serverId).ToList();
         }
 
-        public List<Sobriety> GetSobriety(ulong serverId, ulong userId)
+        public Sobriety GetSobriety(ulong serverId, ulong userId)
         {
             return _context.Sobrieties
-                .Where(s => s.ServerID == serverId && s.UserID == userId)
-                .ToList();
+                .FirstOrDefault(s => s.ServerID == serverId && s.UserID == userId);
         }
     }
 }
