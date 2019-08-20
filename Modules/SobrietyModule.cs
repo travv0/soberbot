@@ -17,6 +17,7 @@ namespace DiscordBot.Modules
         }
 
         [Command("set")]
+        [Summary("Sets your sobriety date to a date in the MM/DD/YYYY format.")]
         public Task Set(string dateString)
         {
             try
@@ -32,6 +33,7 @@ namespace DiscordBot.Modules
         }
 
         [Command("reset")]
+        [Summary("Resets your sobriety date to today in CST.  Use the 'set' command if this sets to the incorrect date.")]
         public Task Reset()
         {
             var today = DateTime.Today;
@@ -40,6 +42,7 @@ namespace DiscordBot.Modules
         }
 
         [Command("list")]
+        [Summary("Lists all users on the server and how many days of sobriety they have.")]
         public Task List()
         {
             var today = DateTime.Today;
@@ -53,6 +56,7 @@ namespace DiscordBot.Modules
         }
 
         [Command("days")]
+        [Summary("Shows how many days of sobriety you have.")]
         public Task Days()
         {
             var today = DateTime.Today;
