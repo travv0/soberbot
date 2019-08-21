@@ -52,5 +52,15 @@ namespace DiscordBot.Services
             return _context.Sobrieties
                 .FirstOrDefault(s => s.ServerID == serverId && s.UserID == userId);
         }
+
+        public void RemoveSobriety(ulong serverId, ulong userId)
+        {
+            var sobriety = _context.Sobrieties.FirstOrDefault(s => s.ServerID == serverId && s.UserID == userId);
+            if (sobriety != null)
+            {
+                _context.Remove(sobriety);
+                _context.SaveChanges();
+            }
+        }
     }
 }

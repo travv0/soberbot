@@ -71,5 +71,13 @@ namespace DiscordBot.Modules
                 return ReplyAsync($"{sobriety.UserName} - {soberDays} day{(soberDays == 1 ? "" : "s")} sober");
             }
         }
+
+        [Command("break")]
+        [Summary("Take a break from sobriety and remove yourself from the database. :(")]
+        public Task Break()
+        {
+            _databaseService.RemoveSobriety(Context.Guild.Id, Context.User.Id);
+            return ReplyAsync($"{Context.User.Username} has been removed from the database.  Sorry to see you go :(");
+        }
     }
 }
