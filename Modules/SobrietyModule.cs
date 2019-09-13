@@ -42,7 +42,7 @@ namespace DiscordBot.Modules
         }
 
         [Command("list")]
-        [Summary("Lists all users on the server and how many days of sobriety they have.")]
+        [Summary("Lists all users on the server ordered by user name and how many days of sobriety they have.")]
         public Task List()
         {
             var today = DateTime.Today;
@@ -51,6 +51,20 @@ namespace DiscordBot.Modules
             {
                 var soberDays = Math.Floor((today - s.SobrietyDate).TotalDays);
                 return $"{s.UserName} - {soberDays} day{(soberDays == 1 ? "" : "s")} sober";
+            });
+            return ReplyAsync(string.Join('\n', list));
+        }
+
+        [Command("leaderboard")]
+        [Summary("Lists all users on the server ordered by sober time and how many days of sobriety they have.")]
+        public Task Leaderboard()
+        {
+            var today = DateTime.Today;
+            var sobrieties = _databaseService.GetSobrieties(Context.Guild.Id).OrderBy(s => s.SobrietyDate);
+            var list = sobrieties.Select((s, i) =>
+            {
+                var soberDays = Math.Floor((today - s.SobrietyDate).TotalDays);
+                return $"{i + 1}. {s.UserName} - {soberDays} day{(soberDays == 1 ? "" : "s")} sober";
             });
             return ReplyAsync(string.Join('\n', list));
         }
