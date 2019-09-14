@@ -34,7 +34,8 @@ namespace DiscordBot.Modules
         }
 
         [Command("reset")]
-        [Summary("Resets your sobriety date to today in CST.  Use the 'set' command if this sets to the incorrect date.")]
+        [Alias("set")]
+        [Summary("Resets your sobriety date to today.  Because of timezones, this might be different than the date where you are.")]
         public Task Reset()
         {
             var today = DateTime.Today;
