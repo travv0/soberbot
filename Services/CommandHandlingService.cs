@@ -1,9 +1,9 @@
-﻿using System;
-using System.Reflection;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using System;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace DiscordBot.Services
 {
@@ -38,12 +38,21 @@ namespace DiscordBot.Services
             int argPos = 0;
             if (!message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) return;
 
+            while (message.Content[argPos] == ' ') argPos++;
+
             var context = new SocketCommandContext(_discord, message);
             var result = await _commands.ExecuteAsync(context, argPos, _provider);
 
-            if (result.Error.HasValue && 
-                result.Error.Value != CommandError.UnknownCommand)
+            //message.Author.
+
+            if (result.Error.Value == CommandError.UnknownCommand)
+            {
+                await context.Channel.SendMessageAsync($"Unknown command: {message.Content.Substring(message.Content.IndexOf('>') + 2)}");
+            }
+            else if (result.Error.HasValue)
+            {
                 await context.Channel.SendMessageAsync(result.ToString());
+            }
         }
     }
 }
