@@ -1,12 +1,13 @@
-﻿using System.Linq;
+﻿using Discord.Commands;
+using System.Linq;
 using System.Threading.Tasks;
-using Discord.Commands;
 
 namespace DiscordBot.Modules
 {
     public class UtilModule : ModuleBase<SocketCommandContext>
     {
         private readonly CommandService _commandService;
+
         public UtilModule(CommandService commandService)
         {
             _commandService = commandService;
@@ -21,7 +22,7 @@ namespace DiscordBot.Modules
         {
             var commandList = _commandService.Commands
                 .Where(c => !string.IsNullOrEmpty(c.Summary))
-                .Select(c => $"{c.Name}{(c.Parameters.Any() ? " " : "")}{string.Join(' ', c.Parameters.Select(p => $"<{p.Name}>"))} - {c.Summary}");
+                .Select(c => $"{c.Name}{(c.Aliases.Any(a => a != c.Name) ? $" (Aliases: {string.Join(' ', c.Aliases.Where(a => a != c.Name).Select(a => $"{string.Join(", ", a)}"))})" : "")}{(c.Parameters.Any() ? " " : "")}{string.Join(' ', c.Parameters.Select(p => $"<{p.Name}>"))} - {c.Summary}");
             return ReplyAsync(string.Join('\n', commandList));
         }
     }
