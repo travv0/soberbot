@@ -33,6 +33,22 @@ namespace DiscordBot.Modules
             }
         }
 
+        [Command("set")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public Task Set(string dateString, IUser user)
+        {
+            try
+            {
+                var soberDate = DateTime.Parse(dateString);
+                _databaseService.SetDate(Context.Guild.Id, user.Id, user.Username, soberDate);
+                return ReplyAsync($"Sober date set to {soberDate.ToShortDateString()} for {user.Username}");
+            }
+            catch
+            {
+                return ReplyAsync($"Please enter date in MM/DD/YYYY format");
+            }
+        }
+
         [Command("reset")]
         [Alias("set")]
         [Summary("Resets your sobriety date to today.  Because of timezones, this might be different than the date where you are.")]
@@ -41,6 +57,15 @@ namespace DiscordBot.Modules
             var today = DateTime.Today;
             _databaseService.SetDate(Context.Guild.Id, Context.User.Id, Context.User.Username, today);
             return ReplyAsync($"Sober date reset to {today.ToShortDateString()} for {Context.User.Username}");
+        }
+
+        [Command("reset")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public Task Reset(IUser user)
+        {
+            var today = DateTime.Today;
+            _databaseService.SetDate(Context.Guild.Id, user.Id, user.Username, today);
+            return ReplyAsync($"Sober date reset to {today.ToShortDateString()} for {user.Username}");
         }
 
         [Command("list")]
@@ -106,11 +131,21 @@ namespace DiscordBot.Modules
         }
 
         [Command("break")]
+        [Alias("delete")]
         [Summary("Take a break from sobriety and remove yourself from the database. :(")]
         public Task Break()
         {
             _databaseService.RemoveSobriety(Context.Guild.Id, Context.User.Id);
             return ReplyAsync($"{Context.User.Username} has been removed from the database.  Sorry to see you go :(");
+        }
+
+        [Command("break")]
+        [Alias("delete")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public Task Delete(IUser user)
+        {
+            _databaseService.RemoveSobriety(Context.Guild.Id, user.Id);
+            return ReplyAsync($"{Context.User.Username} has been removed from the database.");
         }
     }
 }
