@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using DiscordBot.Models;
 using DiscordBot.Services;
 using System;
@@ -78,6 +79,23 @@ namespace DiscordBot.Modules
             if (sobriety == null)
             {
                 return ReplyAsync($"No date set for {Context.User.Username}.  Use the set or reset command to set your start date.");
+            }
+            else
+            {
+                var soberDays = Math.Floor((today - sobriety.SobrietyDate).TotalDays);
+                return ReplyAsync($"{sobriety.UserName} - {soberDays} day{(soberDays == 1 ? "" : "s")} sober");
+            }
+        }
+
+        [Command("days")]
+        [Summary("Shows how many days of sobriety a given user has.")]
+        public Task Days(IUser user)
+        {
+            var today = DateTime.Today;
+            var sobriety = _databaseService.GetSobriety(Context.Guild.Id, user.Id);
+            if (sobriety == null)
+            {
+                return ReplyAsync($"No date set for {user.Username}.");
             }
             else
             {
