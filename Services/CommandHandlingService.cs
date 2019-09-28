@@ -11,13 +11,15 @@ namespace DiscordBot.Services
     {
         private readonly DiscordSocketClient _discord;
         private readonly CommandService _commands;
+        private readonly DatabaseService _databaseService;
         private IServiceProvider _provider;
 
-        public CommandHandlingService(IServiceProvider provider, DiscordSocketClient discord, CommandService commands)
+        public CommandHandlingService(IServiceProvider provider, DiscordSocketClient discord, CommandService commands, DatabaseService databaseService)
         {
             _discord = discord;
             _commands = commands;
             _provider = provider;
+            _databaseService = databaseService;
 
             _discord.MessageReceived += MessageReceived;
         }
@@ -35,15 +37,17 @@ namespace DiscordBot.Services
             if (!(rawMessage is SocketUserMessage message)) return;
             if (message.Source != MessageSource.User) return;
 
+            var context = new SocketCommandContext(_discord, message);
+            _databaseService.UpdateActiveDate(context.Guild.Id, message.Author.Id);
+
             int argPos = 0;
             if (!message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) return;
 
+            _databaseService.PruneInactiveUsers(context.Guild.Id);
+
             while (message.Content[argPos] == ' ') argPos++;
 
-            var context = new SocketCommandContext(_discord, message);
             var result = await _commands.ExecuteAsync(context, argPos, _provider);
-
-            //message.Author.
 
             if (result.Error.Value == CommandError.UnknownCommand)
             {
