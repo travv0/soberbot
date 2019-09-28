@@ -67,9 +67,12 @@ namespace DiscordBot.Services
         public void UpdateActiveDate(ulong serverId, ulong userId)
         {
             var sobriety = _context.Sobrieties.FirstOrDefault(s => s.ServerID == serverId && s.UserID == userId);
-            sobriety.ActiveDate = DateTime.Now;
-            _context.Update(sobriety);
-            _context.SaveChanges();
+            if (sobriety != null)
+            {
+                sobriety.ActiveDate = DateTime.Now;
+                _context.Update(sobriety);
+                _context.SaveChanges();
+            }
         }
 
         public void PruneInactiveUsers(ulong serverId)
