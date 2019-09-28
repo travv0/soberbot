@@ -146,5 +146,13 @@ namespace DiscordBot.Modules
             _databaseService.RemoveSobriety(Context.Guild.Id, user.Id);
             return ReplyAsync($"{Context.User.Username} has been removed from the database.");
         }
+
+        [Command("config prunedays")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public Task ConfigPrunedays(int days)
+        {
+            _databaseService.SetPruneDays(Context.Guild.Id, days);
+            return ReplyAsync($"Users will now be removed from database after {days} days of inactivity.");
+        }
     }
 }
