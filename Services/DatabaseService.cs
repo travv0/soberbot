@@ -79,5 +79,24 @@ namespace DiscordBot.Services
             _context.RemoveRange(inactiveSobrieties);
             _context.SaveChanges();
         }
+
+        public void SetPruneDays(ulong serverId, int days)
+        {
+            var config = _context.Config.FirstOrDefault(c => c.ServerID == serverId);
+            if (config == null)
+            {
+                _context.Config.Add(new Config
+                {
+                    ServerID = serverId,
+                    PruneDays = days,
+                });
+            }
+            else
+            {
+                config.PruneDays = days;
+                _context.Update(config);
+            }
+            _context.SaveChanges();
+        }
     }
 }
