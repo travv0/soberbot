@@ -13,5 +13,6 @@ namespace DiscordBot.Models
         }
 
         public DbSet<Sobriety> Sobrieties { get; set; }
+        public DbSet<Config> Config { get; set; }
     }
 }

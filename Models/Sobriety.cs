@@ -15,5 +15,7 @@ namespace DiscordBot.Models
         public ulong ServerID { get; set; }
 
         public DateTime SobrietyDate { get; set; }
+
+        public DateTime ActiveDate { get; set; }
     }
 }

@@ -30,6 +30,7 @@ namespace DiscordBot.Services
                     UserID = userId,
                     UserName = userName,
                     SobrietyDate = soberDate,
+                    ActiveDate = DateTime.Today,
                 });
             }
             else
@@ -61,6 +62,22 @@ namespace DiscordBot.Services
                 _context.Remove(sobriety);
                 _context.SaveChanges();
             }
+        }
+
+        public void UpdateActiveDate(ulong serverId, ulong userId)
+        {
+            var sobriety = _context.Sobrieties.FirstOrDefault(s => s.ServerID == serverId && s.UserID == userId);
+            sobriety.ActiveDate = DateTime.Now;
+            _context.Update(sobriety);
+            _context.SaveChanges();
+        }
+
+        public void PruneInactiveUsers(ulong serverId)
+        {
+            var pruneDays = _context.Config.FirstOrDefault(c => c.ServerID == serverId)?.PruneDays ?? 30;
+            var inactiveSobrieties = _context.Sobrieties.Where(s => s.ServerID == serverId && s.ActiveDate < DateTime.Now.AddDays(-pruneDays));
+            _context.RemoveRange(inactiveSobrieties);
+            _context.SaveChanges();
         }
     }
 }
