@@ -33,7 +33,8 @@ namespace DiscordBot.Modules
         }
 
         [Command("set")]
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
         public Task Set(string dateString, IUser user)
         {
             try
@@ -59,7 +60,8 @@ namespace DiscordBot.Modules
         }
 
         [Command("reset")]
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
         public Task Reset(IUser user)
         {
             var today = DateTime.Today;
@@ -140,15 +142,17 @@ namespace DiscordBot.Modules
 
         [Command("break")]
         [Alias("delete")]
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
         public Task Delete(IUser user)
         {
             _databaseService.RemoveSobriety(Context.Guild.Id, user.Id);
-            return ReplyAsync($"{Context.User.Username} has been removed from the database.");
+            return ReplyAsync($"{user.Username} has been removed from the database.");
         }
 
         [Command("config prunedays")]
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
         public Task ConfigPrunedays(int days)
         {
             _databaseService.SetPruneDays(Context.Guild.Id, days);
