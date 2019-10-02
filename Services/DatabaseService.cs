@@ -122,6 +122,16 @@ namespace DiscordBot.Services
             _context.SaveChanges();
         }
 
+        public void UnbanUser(ulong serverId, ulong userId)
+        {
+            var ban = _context.Bans.FirstOrDefault(b => b.ServerID == serverId && b.UserID == userId);
+            if (ban != null)
+            {
+                _context.Remove(ban);
+                _context.SaveChanges();
+            }
+        }
+
         public string GetBanMessage(ulong serverId, ulong userId)
         {
             return _context.Bans.FirstOrDefault(b => b.ServerID == serverId && b.UserID == userId)?.Message;
