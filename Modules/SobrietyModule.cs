@@ -158,5 +158,23 @@ namespace DiscordBot.Modules
             _databaseService.SetPruneDays(Context.Guild.Id, days);
             return ReplyAsync($"Users will now be removed from database after {days} days of inactivity.");
         }
+
+        [Command("ban")]
+        [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
+        public Task Ban(IUser user, string message)
+        {
+            _databaseService.BanUser(Context.Guild.Id, user.Id, message);
+            return ReplyAsync($"{user.Username} banned with message: {message}");
+        }
+
+        [Command("unban")]
+        [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
+        public Task Unban(IUser user)
+        {
+            _databaseService.UnbanUser(Context.Guild.Id, user.Id);
+            return ReplyAsync($"{user.Username} has been unbanned.");
+        }
     }
 }

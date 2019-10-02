@@ -3,14 +3,16 @@ using System;
 using DiscordBot.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DiscordBot.Migrations
 {
     [DbContext(typeof(SoberContext))]
-    partial class SoberContextModelSnapshot : ModelSnapshot
+    [Migration("20191002122444_Bans")]
+    partial class Bans
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

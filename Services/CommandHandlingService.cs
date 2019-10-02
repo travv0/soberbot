@@ -43,6 +43,12 @@ namespace DiscordBot.Services
             int argPos = 0;
             if (!message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) return;
 
+            var banMessage = _databaseService.GetBanMessage(context.Guild.Id, message.Author.Id);
+            if (banMessage != null)
+            {
+                await context.Channel.SendMessageAsync($"<@{message.Author.Id}> {banMessage}");
+                return;
+            }
             _databaseService.PruneInactiveUsers(context.Guild.Id);
 
             while (message.Content[argPos] == ' ') argPos++;
