@@ -113,6 +113,7 @@ namespace DiscordBot.Services
                     UserID = userId,
                     Message = message,
                 });
+                RemoveSobriety(serverId, userId);
             }
             else
             {
