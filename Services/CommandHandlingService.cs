@@ -38,6 +38,14 @@ namespace DiscordBot.Services
             if (message.Source != MessageSource.User) return;
 
             var context = new SocketCommandContext(_discord, message);
+
+            var banMessage = _databaseService.GetBanMessage(context.Guild.Id, message.Author.Id);
+            if (banMessage != null)
+            {
+                await context.Channel.SendMessageAsync($"<#{message.Author.Id}> {banMessage}");
+                return;
+            }
+
             _databaseService.UpdateActiveDate(context.Guild.Id, message.Author.Id);
 
             int argPos = 0;
