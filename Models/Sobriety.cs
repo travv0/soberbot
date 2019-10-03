@@ -17,5 +17,7 @@ namespace DiscordBot.Models
         public DateTime SobrietyDate { get; set; }
 
         public DateTime ActiveDate { get; set; }
+
+        public int LastMilestoneDays { get; set; }
     }
 }

@@ -137,5 +137,51 @@ namespace DiscordBot.Services
         {
             return _context.Bans.FirstOrDefault(b => b.ServerID == serverId && b.UserID == userId)?.Message;
         }
+
+        public string GetNewMilestoneName(ulong serverId, ulong userId)
+        {
+            var sobriety = GetSobriety(serverId, userId);
+            var milestone = _context.Milestones
+                .OrderByDescending(m => m.Days)
+                .FirstOrDefault(m => m.Days > sobriety.LastMilestoneDays
+                                  && (DateTime.Today - sobriety.SobrietyDate).TotalDays >= m.Days);
+
+            if (milestone != null)
+            {
+                sobriety.LastMilestoneDays = milestone.Days;
+                _context.Update(sobriety);
+                _context.SaveChanges();
+
+                return milestone.Name;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public void SetMilestoneChannel(ulong serverId, ulong channelId)
+        {
+            var config = _context.Config.FirstOrDefault(c => c.ServerID == serverId);
+            if (config == null)
+            {
+                _context.Config.Add(new Config
+                {
+                    ServerID = serverId,
+                    MilestoneChannelID = channelId,
+                });
+            }
+            else
+            {
+                config.MilestoneChannelID = channelId;
+                _context.Update(config);
+            }
+            _context.SaveChanges();
+        }
+
+        public ulong? GetMilestoneChannel(ulong serverId)
+        {
+            return _context.Config.FirstOrDefault(c => c.ServerID == serverId)?.MilestoneChannelID;
+        }
     }
 }

@@ -159,6 +159,24 @@ namespace DiscordBot.Modules
             return ReplyAsync($"Users will now be removed from database after {days} days of inactivity.");
         }
 
+        [Command("config milestonechannel")]
+        [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
+        public Task ConfigMilestonechannel(IChannel channel)
+        {
+            _databaseService.SetMilestoneChannel(Context.Guild.Id, channel.Id);
+            return ReplyAsync($"Milestones will be posted to <#{channel.Id}>");
+        }
+
+        [Command("config unset milestonechannel")]
+        [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
+        public Task ConfigUnsetMilestonechannel()
+        {
+            _databaseService.SetMilestoneChannel(Context.Guild.Id, 0);
+            return ReplyAsync($"Milestones will be posted to last channel user posted in.");
+        }
+
         [Command("ban")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]

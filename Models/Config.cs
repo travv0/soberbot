@@ -11,5 +11,7 @@ namespace DiscordBot.Models
         public ulong ServerID { get; set; }
 
         public int PruneDays { get; set; }
+
+        public ulong MilestoneChannelID { get; set; }
     }
 }

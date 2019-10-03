@@ -40,6 +40,23 @@ namespace DiscordBot.Services
             var context = new SocketCommandContext(_discord, message);
             _databaseService.UpdateActiveDate(context.Guild.Id, message.Author.Id);
 
+            var milestoneName = _databaseService.GetNewMilestoneName(context.Guild.Id, message.Author.Id);
+
+            if (milestoneName != null)
+            {
+                var milestoneChannel = _databaseService.GetMilestoneChannel(context.Guild.Id);
+                if ((milestoneChannel ?? 0) > 0)
+                {
+                    await context.Guild
+                        .GetTextChannel(milestoneChannel.Value)
+                        .SendMessageAsync($"<@{message.Author.Id}> Congrats! You've reached a new milestone: {milestoneName}");
+                }
+                else
+                {
+                    await context.Channel.SendMessageAsync($"<@{message.Author.Id}> Congrats! You've reached a new milestone: {milestoneName}");
+                }
+            }
+
             int argPos = 0;
             if (!message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) return;
 
