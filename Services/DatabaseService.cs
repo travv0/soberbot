@@ -31,12 +31,14 @@ namespace DiscordBot.Services
                     UserName = userName,
                     SobrietyDate = soberDate,
                     ActiveDate = DateTime.Today,
+                    LastMilestoneDays = (int)Math.Floor((DateTime.Today - soberDate).TotalDays),
                 });
             }
             else
             {
                 existingRecord.SobrietyDate = soberDate;
                 existingRecord.UserName = userName;
+                existingRecord.LastMilestoneDays = (int)Math.Floor((DateTime.Today - soberDate).TotalDays);
                 _context.Sobrieties.Update(existingRecord);
             }
 
@@ -78,6 +80,7 @@ namespace DiscordBot.Services
         public void PruneInactiveUsers(ulong serverId)
         {
             var pruneDays = _context.Config.FirstOrDefault(c => c.ServerID == serverId)?.PruneDays ?? 30;
+            if (pruneDays == 0) pruneDays = 30;
             var inactiveSobrieties = _context.Sobrieties.Where(s => s.ServerID == serverId && s.ActiveDate < DateTime.Now.AddDays(-pruneDays));
             _context.RemoveRange(inactiveSobrieties);
             _context.SaveChanges();
@@ -141,23 +144,25 @@ namespace DiscordBot.Services
         public string GetNewMilestoneName(ulong serverId, ulong userId)
         {
             var sobriety = GetSobriety(serverId, userId);
-            var milestone = _context.Milestones
-                .OrderByDescending(m => m.Days)
-                .FirstOrDefault(m => m.Days > sobriety.LastMilestoneDays
-                                  && (DateTime.Today - sobriety.SobrietyDate).TotalDays >= m.Days);
 
-            if (milestone != null)
+            if (sobriety != null)
             {
-                sobriety.LastMilestoneDays = milestone.Days;
-                _context.Update(sobriety);
-                _context.SaveChanges();
+                var milestone = _context.Milestones
+                    .OrderByDescending(m => m.Days)
+                    .FirstOrDefault(m => m.Days > sobriety.LastMilestoneDays
+                                      && (DateTime.Today - sobriety.SobrietyDate).TotalDays >= m.Days);
 
-                return milestone.Name;
+                if (milestone != null)
+                {
+                    sobriety.LastMilestoneDays = milestone.Days;
+                    _context.Update(sobriety);
+                    _context.SaveChanges();
+
+                    return milestone.Name;
+                }
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         public void SetMilestoneChannel(ulong serverId, ulong channelId)
