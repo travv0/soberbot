@@ -45,7 +45,7 @@ namespace DiscordBot.Services
             if (milestoneName != null)
             {
                 var milestoneChannel = _databaseService.GetMilestoneChannel(context.Guild.Id);
-                var milestoneMessage = $"<@{message.Author.Id}> has reached a new milestone: {milestoneName}";
+                var milestoneMessage = $"<@{message.Author.Id}> has reached a new milestone: **{milestoneName}**";
                 if ((milestoneChannel ?? 0) > 0)
                 {
                     await context.Guild
