@@ -35,6 +35,7 @@ namespace DiscordBot.Modules
         [Command("set")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
+        [Summary("Sets a given user's sobriety date to a date in the MM/DD/YYYY format.")]
         public Task Set(string dateString, IUser user)
         {
             try
@@ -62,6 +63,7 @@ namespace DiscordBot.Modules
         [Command("reset")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
+        [Summary("Resets a given user's sobriety date to today.")]
         public Task Reset(IUser user)
         {
             var today = DateTime.Today;
@@ -144,6 +146,7 @@ namespace DiscordBot.Modules
         [Alias("delete")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
+        [Summary("Remove a given user from the database.")]
         public Task Delete(IUser user)
         {
             _databaseService.RemoveSobriety(Context.Guild.Id, user.Id);
@@ -169,6 +172,7 @@ namespace DiscordBot.Modules
         [Command("config prunedays")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
+        [Summary("Sets the number of days of inactivity before users are pruned from the database.")]
         public Task ConfigPrunedays(int days)
         {
             _databaseService.SetPruneDays(Context.Guild.Id, days);
@@ -178,6 +182,7 @@ namespace DiscordBot.Modules
         [Command("config milestonechannel")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
+        [Summary("Sets the channel that milestone notifications are sent to.  By default, notifications will be sent to last channel user is active in.")]
         public Task ConfigMilestonechannel(IChannel channel)
         {
             _databaseService.SetMilestoneChannel(Context.Guild.Id, channel.Id);
@@ -187,6 +192,7 @@ namespace DiscordBot.Modules
         [Command("config unset milestonechannel")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
+        [Summary("Sets milestone notifications to be sent to last channel user is active in.")]
         public Task ConfigUnsetMilestonechannel()
         {
             _databaseService.SetMilestoneChannel(Context.Guild.Id, 0);
@@ -196,6 +202,7 @@ namespace DiscordBot.Modules
         [Command("ban")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
+        [Summary("Removes user from database and no longer allows them to user the bot.  Replies with given message instead.")]
         public Task Ban(IUser user, string message)
         {
             _databaseService.BanUser(Context.Guild.Id, user.Id, message);
@@ -205,6 +212,7 @@ namespace DiscordBot.Modules
         [Command("unban")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
+        [Summary("Allow banned user to use the bot once again.")]
         public Task Unban(IUser user)
         {
             _databaseService.UnbanUser(Context.Guild.Id, user.Id);
