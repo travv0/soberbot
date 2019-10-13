@@ -150,6 +150,22 @@ namespace DiscordBot.Modules
             return ReplyAsync($"{user.Username} has been removed from the database.");
         }
 
+        [Command("milestones on")]
+        [Summary("Enable milestone notifications.")]
+        public Task MilestonesOn()
+        {
+            _databaseService.EnableMilestones(Context.Guild.Id, Context.User.Id);
+            return ReplyAsync($"Milestones enabled for {Context.User.Username}.");
+        }
+
+        [Command("milestones off")]
+        [Summary("Disable milestone notifications.")]
+        public Task MilestonesOff()
+        {
+            _databaseService.DisableMilestones(Context.Guild.Id, Context.User.Id);
+            return ReplyAsync($"Milestones disabled for {Context.User.Username}.");
+        }
+
         [Command("config prunedays")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]

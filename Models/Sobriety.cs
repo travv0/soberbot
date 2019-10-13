@@ -19,5 +19,7 @@ namespace DiscordBot.Models
         public DateTime ActiveDate { get; set; }
 
         public int LastMilestoneDays { get; set; }
+
+        public bool MilestonesEnabled { get; set; }
     }
 }

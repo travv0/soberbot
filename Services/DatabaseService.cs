@@ -145,7 +145,7 @@ namespace DiscordBot.Services
         {
             var sobriety = GetSobriety(serverId, userId);
 
-            if (sobriety != null)
+            if (sobriety != null && sobriety.MilestonesEnabled)
             {
                 var milestone = _context.Milestones
                     .OrderByDescending(m => m.Days)
@@ -187,6 +187,28 @@ namespace DiscordBot.Services
         public ulong? GetMilestoneChannel(ulong serverId)
         {
             return _context.Config.FirstOrDefault(c => c.ServerID == serverId)?.MilestoneChannelID;
+        }
+
+        public void EnableMilestones(ulong serverId, ulong userId)
+        {
+            var sobriety = _context.Sobrieties.FirstOrDefault(s => s.ServerID == serverId && s.UserID == userId);
+            if (sobriety != null)
+            {
+                sobriety.MilestonesEnabled = true;
+                _context.Update(sobriety);
+                _context.SaveChanges();
+            }
+        }
+
+        public void DisableMilestones(ulong serverId, ulong userId)
+        {
+            var sobriety = _context.Sobrieties.FirstOrDefault(s => s.ServerID == serverId && s.UserID == userId);
+            if (sobriety != null)
+            {
+                sobriety.MilestonesEnabled = false;
+                _context.Update(sobriety);
+                _context.SaveChanges();
+            }
         }
     }
 }
