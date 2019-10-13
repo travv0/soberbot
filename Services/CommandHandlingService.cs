@@ -37,29 +37,34 @@ namespace DiscordBot.Services
             if (!(rawMessage is SocketUserMessage message)) return;
             if (message.Source != MessageSource.User) return;
 
+            int argPos = 0;
+            var isCommand = message.HasMentionPrefix(_discord.CurrentUser, ref argPos);
+
             var context = new SocketCommandContext(_discord, message);
             _databaseService.UpdateActiveDate(context.Guild.Id, message.Author.Id);
 
-            var milestoneName = _databaseService.GetNewMilestoneName(context.Guild.Id, message.Author.Id);
-
-            if (milestoneName != null)
+            if (!isCommand)
             {
-                var milestoneChannel = _databaseService.GetMilestoneChannel(context.Guild.Id);
-                var milestoneMessage = $"<@{message.Author.Id}> has reached a new milestone: **{milestoneName}**";
-                if ((milestoneChannel ?? 0) > 0)
+                var milestoneName = _databaseService.GetNewMilestoneName(context.Guild.Id, message.Author.Id);
+
+                if (milestoneName != null)
                 {
-                    await context.Guild
-                        .GetTextChannel(milestoneChannel.Value)
-                        .SendMessageAsync(milestoneMessage);
-                }
-                else
-                {
-                    await context.Channel.SendMessageAsync(milestoneMessage);
+                    var milestoneChannel = _databaseService.GetMilestoneChannel(context.Guild.Id);
+                    var milestoneMessage = $"<@{message.Author.Id}> has reached a new milestone: **{milestoneName}**";
+                    if ((milestoneChannel ?? 0) > 0)
+                    {
+                        await context.Guild
+                            .GetTextChannel(milestoneChannel.Value)
+                            .SendMessageAsync(milestoneMessage);
+                    }
+                    else
+                    {
+                        await context.Channel.SendMessageAsync(milestoneMessage);
+                    }
                 }
             }
 
-            int argPos = 0;
-            if (!message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) return;
+            if (!isCommand) return;
 
             var banMessage = _databaseService.GetBanMessage(context.Guild.Id, message.Author.Id);
             if (banMessage != null)

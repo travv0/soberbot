@@ -32,6 +32,7 @@ namespace DiscordBot.Services
                     SobrietyDate = soberDate,
                     ActiveDate = DateTime.Today,
                     LastMilestoneDays = (int)Math.Floor((DateTime.Today - soberDate).TotalDays),
+                    MilestonesEnabled = true,
                 });
             }
             else
