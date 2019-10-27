@@ -16,8 +16,8 @@ namespace DiscordBot
         static void Main()
             => new Program().MainAsync().GetAwaiter().GetResult();
 
-        private DiscordSocketClient _client;
-        private IConfiguration _config;
+        private DiscordSocketClient? _client;
+        private IConfiguration? _config;
 
         public async Task MainAsync()
         {

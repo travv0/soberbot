@@ -10,6 +10,6 @@ namespace DiscordBot.Models
 
         public int Days { get; set; }
 
-        public string Name { get; set; }
+        public string? Name { get; set; }
     }
 }

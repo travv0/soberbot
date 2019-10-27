@@ -9,7 +9,7 @@ namespace DiscordBot.Services
 {
     public class DatabaseService
     {
-        private SoberContext _context;
+        private SoberContext _context = new SoberContext();
 
         public void Initialize(SoberContext soberContext)
         {
@@ -24,7 +24,7 @@ namespace DiscordBot.Services
 
             if (existingRecord == null)
             {
-                _context.Sobrieties.Add(new Sobriety
+                _context.Sobrieties?.Add(new Sobriety
                 {
                     ServerID = serverId,
                     UserID = userId,
@@ -40,7 +40,7 @@ namespace DiscordBot.Services
                 existingRecord.SobrietyDate = soberDate;
                 existingRecord.UserName = userName;
                 existingRecord.LastMilestoneDays = (int)Math.Floor((DateTime.Today - soberDate).TotalDays);
-                _context.Sobrieties.Update(existingRecord);
+                _context.Sobrieties?.Update(existingRecord);
             }
 
             _context.SaveChanges();
@@ -92,7 +92,7 @@ namespace DiscordBot.Services
             var config = _context.Config.FirstOrDefault(c => c.ServerID == serverId);
             if (config == null)
             {
-                _context.Config.Add(new Config
+                _context.Config?.Add(new Config
                 {
                     ServerID = serverId,
                     PruneDays = days,
@@ -111,7 +111,7 @@ namespace DiscordBot.Services
             var ban = _context.Bans.FirstOrDefault(b => b.ServerID == serverId && b.UserID == userId);
             if (ban == null)
             {
-                _context.Bans.Add(new Ban
+                _context.Bans?.Add(new Ban
                 {
                     ServerID = serverId,
                     UserID = userId,
@@ -137,12 +137,12 @@ namespace DiscordBot.Services
             }
         }
 
-        public string GetBanMessage(ulong serverId, ulong userId)
+        public string? GetBanMessage(ulong serverId, ulong userId)
         {
             return _context.Bans.FirstOrDefault(b => b.ServerID == serverId && b.UserID == userId)?.Message;
         }
 
-        public string GetNewMilestoneName(ulong serverId, ulong userId)
+        public string? GetNewMilestoneName(ulong serverId, ulong userId)
         {
             var sobriety = GetSobriety(serverId, userId);
 
@@ -171,7 +171,7 @@ namespace DiscordBot.Services
             var config = _context.Config.FirstOrDefault(c => c.ServerID == serverId);
             if (config == null)
             {
-                _context.Config.Add(new Config
+                _context.Config?.Add(new Config
                 {
                     ServerID = serverId,
                     MilestoneChannelID = channelId,

@@ -10,7 +10,7 @@ namespace DiscordBot.Models
 
         public ulong UserID { get; set; }
 
-        public string UserName { get; set; }
+        public string? UserName { get; set; }
 
         public ulong ServerID { get; set; }
 

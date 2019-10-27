@@ -12,9 +12,9 @@ namespace DiscordBot.Models
             optionsBuilder.UseSqlite("Data Source=soberbot.db");
         }
 
-        public DbSet<Sobriety> Sobrieties { get; set; }
-        public DbSet<Config> Config { get; set; }
-        public DbSet<Ban> Bans { get; set; }
-        public DbSet<Milestone> Milestones { get; set; }
+        public DbSet<Sobriety>? Sobrieties { get; set; }
+        public DbSet<Config>? Config { get; set; }
+        public DbSet<Ban>? Bans { get; set; }
+        public DbSet<Milestone>? Milestones { get; set; }
     }
 }

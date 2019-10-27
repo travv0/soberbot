@@ -12,6 +12,6 @@ namespace DiscordBot.Models
 
         public ulong UserID { get; set; }
 
-        public string Message { get; set; }
+        public string? Message { get; set; }
     }
 }

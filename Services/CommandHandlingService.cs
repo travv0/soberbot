@@ -49,12 +49,12 @@ namespace DiscordBot.Services
 
                 if (milestoneName != null)
                 {
-                    var milestoneChannel = _databaseService.GetMilestoneChannel(context.Guild.Id);
+                    var milestoneChannel = _databaseService.GetMilestoneChannel(context.Guild.Id).GetValueOrDefault(0);
                     var milestoneMessage = $"<@{message.Author.Id}> has reached a new milestone: **{milestoneName}**";
-                    if ((milestoneChannel ?? 0) > 0)
+                    if (milestoneChannel > 0)
                     {
                         await context.Guild
-                            .GetTextChannel(milestoneChannel.Value)
+                            .GetTextChannel(milestoneChannel)
                             .SendMessageAsync(milestoneMessage);
                     }
                     else
@@ -78,7 +78,7 @@ namespace DiscordBot.Services
 
             var result = await _commands.ExecuteAsync(context, argPos, _provider);
 
-            if (result.Error.Value == CommandError.UnknownCommand)
+            if (result.Error == CommandError.UnknownCommand)
             {
                 await context.Channel.SendMessageAsync($"Unknown command: {message.Content.Substring(message.Content.IndexOf('>') + 2)}");
             }
