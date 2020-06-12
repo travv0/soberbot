@@ -64,7 +64,7 @@ namespace DiscordBot.Modules
 
             embedBuilder.WithDescription("To use the bot, tag it and specify one of the commands shown below.  "
                                        + "Replace the parts of commands surrounded by <> with your own text.\n"
-                                       + "Example: " + _discord.CurrentUser.Mention + " set 2/31/2020")
+                                       + "**Example:** " + _discord.CurrentUser.Mention + " set 3/31/2020")
                 .WithFooter("Source code can be found at https://github.com/travv0/soberbot\n"
                           + "Please report any bugs at https://github.com/travv0/soberbot/issues");
 
