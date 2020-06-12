@@ -20,16 +20,7 @@ namespace DiscordBot.Modules
         [Summary("Sets your sobriety date to a date in the MM/DD/YYYY format.")]
         public Task Set(string dateString)
         {
-            try
-            {
-                var soberDate = DateTime.Parse(dateString);
-                _databaseService.SetDate(Context.Guild.Id, Context.User.Id, Context.User.Username, soberDate);
-                return ReplyAsync($"Sober date set to {soberDate.ToShortDateString()} for {Context.User.Username}");
-            }
-            catch
-            {
-                return ReplyAsync($"Please enter date in MM/DD/YYYY format");
-            }
+            return Set(dateString, Context.User);
         }
 
         [Command("set")]
@@ -55,9 +46,7 @@ namespace DiscordBot.Modules
         [Summary("Resets your sobriety date to today.  Because of timezones, this might be different than the date where you are.")]
         public Task Reset()
         {
-            var today = DateTime.Today;
-            _databaseService.SetDate(Context.Guild.Id, Context.User.Id, Context.User.Username, today);
-            return ReplyAsync($"Sober date reset to {today.ToShortDateString()} for {Context.User.Username}");
+            return Reset(Context.User);
         }
 
         [Command("reset")]
@@ -103,28 +92,18 @@ namespace DiscordBot.Modules
         [Summary("Shows how many days of sobriety you have.")]
         public Task Days()
         {
-            var today = DateTime.Today;
-            var sobriety = _databaseService.GetSobriety(Context.Guild.Id, Context.User.Id);
-            if (sobriety == null)
-            {
-                return ReplyAsync($"No date set for {Context.User.Username}.  Use the set or reset command to set your start date.");
-            }
-            else
-            {
-                var soberDays = Math.Floor((today - sobriety.SobrietyDate).TotalDays);
-                return ReplyAsync($"{sobriety.UserName} - {soberDays} day{(soberDays == 1 ? "" : "s")} sober");
-            }
+            return Days(Context.User, true);
         }
 
         [Command("days")]
         [Summary("Shows how many days of sobriety a given user has.")]
-        public Task Days(IUser user)
+        public Task Days(IUser user, bool isSelf = false)
         {
             var today = DateTime.Today;
             var sobriety = _databaseService.GetSobriety(Context.Guild.Id, user.Id);
             if (sobriety == null)
             {
-                return ReplyAsync($"No date set for {user.Username}.");
+                return ReplyAsync($"No date set for {user.Username}." + (isSelf ? "  Use the set or reset command to set your start date." : ""));
             }
             else
             {
@@ -136,10 +115,9 @@ namespace DiscordBot.Modules
         [Command("break")]
         [Alias("delete")]
         [Summary("Take a break from sobriety and remove yourself from the database. :(")]
-        public Task Break()
+        public Task Delete()
         {
-            _databaseService.RemoveSobriety(Context.Guild.Id, Context.User.Id);
-            return ReplyAsync($"{Context.User.Username} has been removed from the database.  Sorry to see you go :(");
+            return Delete(Context.User, true);
         }
 
         [Command("break")]
@@ -147,10 +125,10 @@ namespace DiscordBot.Modules
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
         [Summary("Remove a given user from the database.")]
-        public Task Delete(IUser user)
+        public Task Delete(IUser user, bool isSelf = false)
         {
             _databaseService.RemoveSobriety(Context.Guild.Id, user.Id);
-            return ReplyAsync($"{user.Username} has been removed from the database.");
+            return ReplyAsync($"{user.Username} has been removed from the database." + (isSelf ? "  Sorry to see you go :(" : ""));
         }
 
         [Command("milestones on")]

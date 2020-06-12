@@ -19,8 +19,7 @@ namespace DiscordBot.Services
 
         public void SetDate(ulong serverId, ulong userId, string userName, DateTime soberDate)
         {
-            var existingRecord = _context.Sobrieties
-                .FirstOrDefault(s => s.ServerID == serverId && s.UserID == userId);
+            var existingRecord = GetSobriety(serverId, userId);
 
             if (existingRecord == null)
             {
@@ -59,7 +58,7 @@ namespace DiscordBot.Services
 
         public void RemoveSobriety(ulong serverId, ulong userId)
         {
-            var sobriety = _context.Sobrieties.FirstOrDefault(s => s.ServerID == serverId && s.UserID == userId);
+            var sobriety = GetSobriety(serverId, userId);
             if (sobriety != null)
             {
                 _context.Remove(sobriety);
@@ -69,7 +68,7 @@ namespace DiscordBot.Services
 
         public void UpdateActiveDate(ulong serverId, ulong userId)
         {
-            var sobriety = _context.Sobrieties.FirstOrDefault(s => s.ServerID == serverId && s.UserID == userId);
+            var sobriety = GetSobriety(serverId, userId);
             if (sobriety != null)
             {
                 sobriety.ActiveDate = DateTime.Now;
@@ -192,7 +191,7 @@ namespace DiscordBot.Services
 
         public void EnableMilestones(ulong serverId, ulong userId)
         {
-            var sobriety = _context.Sobrieties.FirstOrDefault(s => s.ServerID == serverId && s.UserID == userId);
+            var sobriety = GetSobriety(serverId, userId);
             if (sobriety != null)
             {
                 sobriety.MilestonesEnabled = true;
@@ -203,7 +202,7 @@ namespace DiscordBot.Services
 
         public void DisableMilestones(ulong serverId, ulong userId)
         {
-            var sobriety = _context.Sobrieties.FirstOrDefault(s => s.ServerID == serverId && s.UserID == userId);
+            var sobriety = GetSobriety(serverId, userId);
             if (sobriety != null)
             {
                 sobriety.MilestonesEnabled = false;
