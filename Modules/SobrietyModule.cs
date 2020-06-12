@@ -88,6 +88,22 @@ namespace DiscordBot.Modules
             return ReplyAsync(string.Join('\n', list));
         }
 
+        Task Days(IUser user, bool isSelf = false)
+        {
+            var today = DateTime.Today;
+            var sobriety = _databaseService.GetSobriety(Context.Guild.Id, user.Id);
+            if (sobriety == null)
+            {
+                return ReplyAsync($"No date set for {user.Username}."
+                    + (isSelf ? "  Use the set or reset command to set your start date." : ""));
+            }
+            else
+            {
+                var soberDays = Math.Floor((today - sobriety.SobrietyDate).TotalDays);
+                return ReplyAsync($"{sobriety.UserName} - {soberDays} day{(soberDays == 1 ? "" : "s")} sober");
+            }
+        }
+
         [Command("days")]
         [Summary("Shows how many days of sobriety you have.")]
         public Task Days()
@@ -97,19 +113,16 @@ namespace DiscordBot.Modules
 
         [Command("days")]
         [Summary("Shows how many days of sobriety a given user has.")]
-        public Task Days(IUser user, bool isSelf = false)
+        public Task Days(IUser user)
         {
-            var today = DateTime.Today;
-            var sobriety = _databaseService.GetSobriety(Context.Guild.Id, user.Id);
-            if (sobriety == null)
-            {
-                return ReplyAsync($"No date set for {user.Username}." + (isSelf ? "  Use the set or reset command to set your start date." : ""));
-            }
-            else
-            {
-                var soberDays = Math.Floor((today - sobriety.SobrietyDate).TotalDays);
-                return ReplyAsync($"{sobriety.UserName} - {soberDays} day{(soberDays == 1 ? "" : "s")} sober");
-            }
+            return Days(user);
+        }
+
+        Task Delete(IUser user, bool isSelf = false)
+        {
+            _databaseService.RemoveSobriety(Context.Guild.Id, user.Id);
+            return ReplyAsync($"{user.Username} has been removed from the database."
+                + (isSelf ? "  Sorry to see you go :(" : ""));
         }
 
         [Command("break")]
@@ -125,10 +138,9 @@ namespace DiscordBot.Modules
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
         [Summary("Remove a given user from the database.")]
-        public Task Delete(IUser user, bool isSelf = false)
+        public Task Delete(IUser user)
         {
-            _databaseService.RemoveSobriety(Context.Guild.Id, user.Id);
-            return ReplyAsync($"{user.Username} has been removed from the database." + (isSelf ? "  Sorry to see you go :(" : ""));
+            return Delete(user);
         }
 
         [Command("milestones on")]
