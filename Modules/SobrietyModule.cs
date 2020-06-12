@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using DiscordBot.Models;
 using DiscordBot.Services;
 using System;
 using System.Linq;
@@ -60,32 +61,31 @@ namespace DiscordBot.Modules
             return ReplyAsync($"Sober date reset to {today.ToShortDateString()} for {user.Username}");
         }
 
+        public Task List(Func<Sobriety, IComparable?> orderBy, bool numbered = false)
+        {
+            var today = DateTime.Today;
+            var sobrieties = _databaseService.GetSobrieties(Context.Guild.Id).OrderBy(orderBy);
+            var list = sobrieties.Select((s, i) =>
+            {
+                var soberDays = Math.Floor((today - s.SobrietyDate).TotalDays);
+                var number = numbered ? $"{i + 1}. " : "";
+                return $"{number}{s.UserName} - {soberDays} day{(soberDays == 1 ? "" : "s")} sober";
+            });
+            return ReplyAsync(string.Join('\n', list));
+        }
+
         [Command("list")]
         [Summary("Lists all users on the server ordered by user name and how many days of sobriety they have.")]
         public Task List()
         {
-            var today = DateTime.Today;
-            var sobrieties = _databaseService.GetSobrieties(Context.Guild.Id).OrderBy(s => s.UserName);
-            var list = sobrieties.Select(s =>
-            {
-                var soberDays = Math.Floor((today - s.SobrietyDate).TotalDays);
-                return $"{s.UserName} - {soberDays} day{(soberDays == 1 ? "" : "s")} sober";
-            });
-            return ReplyAsync(string.Join('\n', list));
+            return List(s => s.UserName);
         }
 
         [Command("leaderboard")]
         [Summary("Lists all users on the server ordered by sober time and how many days of sobriety they have.")]
         public Task Leaderboard()
         {
-            var today = DateTime.Today;
-            var sobrieties = _databaseService.GetSobrieties(Context.Guild.Id).OrderBy(s => s.SobrietyDate);
-            var list = sobrieties.Select((s, i) =>
-            {
-                var soberDays = Math.Floor((today - s.SobrietyDate).TotalDays);
-                return $"{i + 1}. {s.UserName} - {soberDays} day{(soberDays == 1 ? "" : "s")} sober";
-            });
-            return ReplyAsync(string.Join('\n', list));
+            return List(s => s.SobrietyDate, true);
         }
 
         Task Days(IUser user, bool isSelf = false)
