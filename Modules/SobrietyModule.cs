@@ -118,7 +118,7 @@ namespace DiscordBot.Modules
             return Days(user, false);
         }
 
-        Task Delete(IUser user, bool isSelf = false)
+        Task Delete(IUser user, bool isSelf)
         {
             _databaseService.RemoveSobriety(Context.Guild.Id, user.Id);
             return ReplyAsync($"{user.Username} has been removed from the database."
@@ -140,7 +140,7 @@ namespace DiscordBot.Modules
         [Summary("Remove a given user from the database.")]
         public Task Delete(IUser user)
         {
-            return Delete(user);
+            return Delete(user, false);
         }
 
         [Command("milestones on")]
