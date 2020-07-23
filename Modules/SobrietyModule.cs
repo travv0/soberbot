@@ -88,7 +88,7 @@ namespace DiscordBot.Modules
             return List(s => s.SobrietyDate, true);
         }
 
-        Task Days(IUser user, bool isSelf = false)
+        Task Days(IUser user, bool isSelf)
         {
             var today = DateTime.Today;
             var sobriety = _databaseService.GetSobriety(Context.Guild.Id, user.Id);
@@ -115,7 +115,7 @@ namespace DiscordBot.Modules
         [Summary("Shows how many days of sobriety a given user has.")]
         public Task Days(IUser user)
         {
-            return Days(user);
+            return Days(user, false);
         }
 
         Task Delete(IUser user, bool isSelf = false)
