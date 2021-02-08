@@ -8,18 +8,14 @@ open Discord.Commands
 open Discord.WebSocket
 
 type LogService(discord: DiscordSocketClient, commands: CommandService, loggerFactory: ILoggerFactory) =
-    member _.ConfigureLogging(factory: ILoggerFactory) = factory.AddConsole()
+    member val loggerFactory = loggerFactory.AddConsole()
 
-    member this.LoggerFactory = this.ConfigureLogging(loggerFactory)
+    member val discordLogger = loggerFactory.CreateLogger("discord")
 
-    member this.DiscordLogger =
-        this.LoggerFactory.CreateLogger("discord")
-
-    member this.CommandsLogger =
-        this.LoggerFactory.CreateLogger("commands")
+    member val commandsLogger = loggerFactory.CreateLogger("commands")
 
     member this.LogDiscord(message: LogMessage) =
-        this.DiscordLogger.Log(
+        this.discordLogger.Log(
             this.LogLevelFromSeverity(message.Severity),
             null,
             message,
@@ -47,7 +43,7 @@ type LogService(discord: DiscordSocketClient, commands: CommandService, loggerFa
             |> ignore
         | _ -> ()
 
-        this.CommandsLogger.Log(
+        this.commandsLogger.Log(
             this.LogLevelFromSeverity(message.Severity),
             null,
             message,

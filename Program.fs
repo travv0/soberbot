@@ -8,7 +8,7 @@ open Discord.WebSocket
 open DiscordBot.Services
 open Models
 
-let configureServices (client: IDiscordClient) (config: IConfigurationRoot) =
+let configureServices (client: DiscordSocketClient) (config: IConfigurationRoot) =
     ServiceCollection()
         // Base
         .AddSingleton(
@@ -27,43 +27,40 @@ let configureServices (client: IDiscordClient) (config: IConfigurationRoot) =
         .AddSingleton<DatabaseService>()
         .BuildServiceProvider()
 
-let mainAsync () =
-    use client = new DiscordSocketClient()
+let mainAsync =
+    async {
+        use client = new DiscordSocketClient()
 
-    let config =
-        ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("config.json")
-            .Build()
+        let config =
+            ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("config.json")
+                .Build()
 
-    let services = configureServices client config
+        let services = configureServices client config
 
-    services.GetRequiredService<LogService>()
-    |> ignore
+        services.GetRequiredService<LogService>()
+        |> ignore
 
-    services
-        .GetRequiredService<CommandHandlingService>()
-        .InitializeAsync(services)
-    |> Async.RunSynchronously
+        do!
+            services
+                .GetRequiredService<CommandHandlingService>()
+                .InitializeAsync(services)
 
-    services
-        .GetRequiredService<DatabaseService>()
-        .Initialize(new SoberContext())
-    |> ignore
+        services
+            .GetRequiredService<DatabaseService>()
+            .Initialize(new SoberContext())
+        |> ignore
 
-    client.LoginAsync(TokenType.Bot, config.["token"])
-    |> Async.AwaitTask
-    |> Async.RunSynchronously
+        do!
+            client.LoginAsync(TokenType.Bot, config.["token"])
+            |> Async.AwaitTask
 
-    client.StartAsync()
-    |> Async.AwaitTask
-    |> Async.RunSynchronously
-
-    Task.Delay(-1)
-    |> Async.AwaitTask
-    |> Async.RunSynchronously
+        do! client.StartAsync() |> Async.AwaitTask
+        do! Task.Delay(-1) |> Async.AwaitTask
+    }
 
 [<EntryPoint>]
 let main _ =
-    mainAsync ()
+    mainAsync |> Async.RunSynchronously
     0

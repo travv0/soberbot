@@ -48,6 +48,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
     <!-- Remove this line if using another logging sink: -->
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.2.0" />
+    <PackageReference Include="SQLProvider" Version="1.1.101" />
   </ItemGroup>
 
 </Project>
