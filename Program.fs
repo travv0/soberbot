@@ -8,7 +8,7 @@ open Discord.WebSocket
 open DiscordBot.Services
 open Models
 
-let configureServices (client: DiscordSocketClient) (config: IConfigurationRoot) =
+let configureServices (client: DiscordSocketClient) (config: IConfigurationRoot) (dbService: DatabaseService) =
     ServiceCollection()
         // Base
         .AddSingleton(
@@ -24,7 +24,9 @@ let configureServices (client: DiscordSocketClient) (config: IConfigurationRoot)
             config
         )
         // Add additional services here...
-        .AddSingleton<DatabaseService>()
+        .AddSingleton(
+            dbService
+        )
         .BuildServiceProvider()
 
 let mainAsync =
@@ -37,7 +39,10 @@ let mainAsync =
                 .AddJsonFile("config.json")
                 .Build()
 
-        let services = configureServices client config
+        let dbService = DatabaseService(new SoberContext())
+
+        let services =
+            configureServices client config dbService
 
         services.GetRequiredService<LogService>()
         |> ignore
@@ -46,11 +51,6 @@ let mainAsync =
             services
                 .GetRequiredService<CommandHandlingService>()
                 .InitializeAsync(services)
-
-        services
-            .GetRequiredService<DatabaseService>()
-            .Initialize(new SoberContext())
-        |> ignore
 
         do!
             client.LoginAsync(TokenType.Bot, config.["token"])

@@ -19,81 +19,93 @@ type CommandHandlingService
     let _provider = provider
     let _databaseService = databaseService
 
-    member _.MessageReceived(rawMessage: SocketMessage): Task =
+    member __.MessageReceived(rawMessage: SocketMessage): Task =
         async {
-            match rawMessage with
-            | :? SocketUserMessage as message ->
-                if (message.Source = MessageSource.User) then
-                    let argPos = 0
+            try
+                match rawMessage with
+                | :? SocketUserMessage as message ->
+                    if (message.Source = MessageSource.User) then
+                        let mutable argPos = 0
 
-                    let isCommand =
-                        message.HasMentionPrefix(_discord.CurrentUser, ref argPos)
+                        let isCommand =
+                            message.HasMentionPrefix(_discord.CurrentUser, &argPos)
 
-                    let context = SocketCommandContext(_discord, message)
-                    _databaseService.UpdateActiveDate(context.Guild.Id, message.Author.Id)
+                        printfn "HERE1"
 
-                    if not isCommand then
-                        match _databaseService.GetNewMilestoneName(context.Guild.Id, message.Author.Id) with
-                        | Some milestoneName ->
-                            let milestoneChannel =
-                                _databaseService.GetMilestoneChannel(context.Guild.Id)
-                                |> Option.defaultValue 0UL
+                        let context = SocketCommandContext(_discord, message)
+                        printfn "HERE2"
+                        _databaseService.UpdateActiveDate(context.Guild.Id, message.Author.Id)
 
-                            let milestoneMessage =
-                                $"<@{message.Author.Id}> has reached a new milestone: **{milestoneName}**"
 
-                            if (milestoneChannel > 0UL) then
-                                do!
-                                    context
-                                        .Guild
-                                        .GetTextChannel(milestoneChannel)
-                                        .SendMessageAsync(milestoneMessage)
-                                    |> Async.AwaitTask
-                                    |> Async.Ignore
-                            else
-                                do!
-                                    (context.Channel :?> SocketTextChannel)
-                                        .SendMessageAsync(milestoneMessage)
-                                    |> Async.AwaitTask
-                                    |> Async.Ignore
-                        | None -> ()
+                        if not isCommand then
+                            match _databaseService.GetNewMilestoneName(context.Guild.Id, message.Author.Id) with
+                            | Some milestoneName ->
+                                let milestoneChannel =
+                                    _databaseService.GetMilestoneChannel(context.Guild.Id)
+                                    |> Option.defaultValue 0UL
 
-                    if isCommand then
-                        match _databaseService.GetBanMessage(context.Guild.Id, message.Author.Id) with
-                        | Some banMessage ->
-                            do!
-                                (context.Channel :?> SocketTextChannel)
-                                    .SendMessageAsync($"<@{message.Author.Id}> {banMessage}")
-                                |> Async.AwaitTask
-                                |> Async.Ignore
-                        | None ->
-                            _databaseService.PruneInactiveUsers(context.Guild.Id)
-                            |> ignore
+                                let milestoneMessage =
+                                    $"<@{message.Author.Id}> has reached a new milestone: **{milestoneName}**"
 
-                            // while (message.Content[argPos] == ' ') argPos++
+                                if (milestoneChannel > 0UL) then
+                                    do!
+                                        context
+                                            .Guild
+                                            .GetTextChannel(milestoneChannel)
+                                            .SendMessageAsync(milestoneMessage)
+                                        |> Async.AwaitTask
+                                        |> Async.Ignore
+                                else
+                                    do!
+                                        (context.Channel :?> SocketTextChannel)
+                                            .SendMessageAsync(milestoneMessage)
+                                        |> Async.AwaitTask
+                                        |> Async.Ignore
+                            | None -> ()
+                        else
+                            match _databaseService.GetBanMessage(context.Guild.Id, message.Author.Id) with
+                            | Some banMessage ->
+                                printfn "%s" banMessage
 
-                            let! result =
-                                _commands.ExecuteAsync(context, argPos, _provider)
-                                |> Async.AwaitTask
-
-                            if result.Error = Nullable(CommandError.UnknownCommand) then
                                 do!
                                     (context.Channel :?> SocketTextChannel)
-                                        .SendMessageAsync(
-                                            text =
-                                                sprintf
-                                                    "Unknown command: %s"
-                                                    (message.Content.Substring(message.Content.IndexOf('>') + 2))
-                                        )
+                                        .SendMessageAsync($"<@{message.Author.Id}> {banMessage}")
                                     |> Async.AwaitTask
                                     |> Async.Ignore
-                            elif (result.Error.HasValue) then
-                                do!
-                                    (context.Channel :?> SocketTextChannel)
-                                        .SendMessageAsync(result.ToString())
+                            | None ->
+                                _databaseService.PruneInactiveUsers(context.Guild.Id)
+                                |> ignore
+
+                                while (message.Content.[argPos] = ' ') do
+                                    argPos <- argPos + 1
+
+                                printfn "%b %d" isCommand argPos
+
+                                let! result =
+                                    _commands.ExecuteAsync(context, argPos, _provider)
                                     |> Async.AwaitTask
-                                    |> Async.Ignore
-            | _ -> ()
+
+                                printfn "%O" result
+
+                                if result.Error = Nullable(CommandError.UnknownCommand) then
+                                    do!
+                                        (context.Channel :?> SocketTextChannel)
+                                            .SendMessageAsync(
+                                                text =
+                                                    sprintf
+                                                        "Unknown command: %s"
+                                                        (message.Content.Substring(message.Content.IndexOf('>') + 2))
+                                            )
+                                        |> Async.AwaitTask
+                                        |> Async.Ignore
+                                elif (result.Error.HasValue) then
+                                    do!
+                                        (context.Channel :?> SocketTextChannel)
+                                            .SendMessageAsync(result.ToString())
+                                        |> Async.AwaitTask
+                                        |> Async.Ignore
+                | _ -> ()
+            with e -> printfn "Error: %A" e
         }
         |> Async.RunSynchronously
 

@@ -28,17 +28,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Migrations\20190928140448_Init.cs" />
-    <Compile Remove="Migrations\20191002122257_Bans.cs" />
-    <Compile Remove="Migrations\20191002122257_Bans.Designer.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.1.1" />
     <PackageReference Include="Discord.Net.WebSocket" Version="2.1.1" />
     <PackageReference Include="Discord.Net.Commands" Version="2.1.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.6" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.2.6">
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="5.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
@@ -48,7 +43,6 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
     <!-- Remove this line if using another logging sink: -->
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.2.0" />
-    <PackageReference Include="SQLProvider" Version="1.1.101" />
   </ItemGroup>
 
 </Project>
