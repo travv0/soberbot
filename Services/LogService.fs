@@ -7,12 +7,10 @@ open Discord
 open Discord.Commands
 open Discord.WebSocket
 
-type LogService(discord: DiscordSocketClient, commands: CommandService, loggerFactory: ILoggerFactory) =
-    member val loggerFactory = loggerFactory.AddConsole()
+type LogService(discord: DiscordSocketClient, commands: CommandService) =
+    let discordLogger = loggerFactory.CreateLogger("discord")
 
-    member val discordLogger = loggerFactory.CreateLogger("discord")
-
-    member val commandsLogger = loggerFactory.CreateLogger("commands")
+    let commandsLogger = loggerFactory.CreateLogger("commands")
 
     member this.LogDiscord(message: LogMessage) =
         this.discordLogger.Log(

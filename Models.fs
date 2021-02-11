@@ -2,10 +2,15 @@
 
 open Microsoft.EntityFrameworkCore
 open System
+open System.ComponentModel.DataAnnotations
 
 type Ban() =
     [<DefaultValue>]
-    val mutable ID: uint64
+    val mutable id: uint64
+
+    member this.ID
+        with get () = this.id
+        and set id = this.id <- id
 
     [<DefaultValue>]
     val mutable ServerID: uint64
@@ -18,7 +23,11 @@ type Ban() =
 
 type Config() =
     [<DefaultValue>]
-    val mutable ID: uint64
+    val mutable id: uint64
+
+    member this.ID
+        with get () = this.id
+        and set id = this.id <- id
 
     [<DefaultValue>]
     val mutable ServerID: uint64
@@ -31,7 +40,11 @@ type Config() =
 
 type Milestone() =
     [<DefaultValue>]
-    val mutable ID: uint64
+    val mutable id: uint64
+
+    member this.ID
+        with get () = this.id
+        and set id = this.id <- id
 
     [<DefaultValue>]
     val mutable Days: int
@@ -39,46 +52,48 @@ type Milestone() =
     [<DefaultValue>]
     val mutable Name: string
 
-type Sobriety() =
-    [<DefaultValue>]
-    val mutable ID: uint64
-
-    [<DefaultValue>]
-    val mutable UserID: uint64
-
-    [<DefaultValue>]
-    val mutable UserName: string
-
-    [<DefaultValue>]
-    val mutable ServerID: uint64
-
-    [<DefaultValue>]
-    val mutable SobrietyDate: DateTime
-
-    [<DefaultValue>]
-    val mutable ActiveDate: DateTime
-
-    [<DefaultValue>]
-    val mutable LastMilestoneDays: int
-
-    [<DefaultValue>]
-    val mutable MilestonesEnabled: bool
+[<CLIMutable>]
+type Sobriety =
+    { ID: uint64
+      UserID: uint64
+      UserName: string
+      ServerID: uint64
+      SobrietyDate: DateTime
+      ActiveDate: DateTime
+      LastMilestoneDays: int
+      MilestonesEnabled: bool }
 
 type SoberContext() =
     inherit DbContext()
 
-    override _.OnConfiguring(optionsBuilder) =
+    override __.OnConfiguring(optionsBuilder) =
         optionsBuilder.UseSqlite("Data Source=soberbot.db")
         |> ignore
 
     [<DefaultValue>]
-    val mutable Sobrieties: DbSet<Sobriety>
+    val mutable sobrieties: DbSet<Sobriety>
+
+    member this.Sobrieties
+        with get () = this.sobrieties
+        and set s = this.sobrieties <- s
 
     [<DefaultValue>]
-    val mutable Config: DbSet<Config>
+    val mutable config: DbSet<Config>
+
+    member this.Config
+        with get () = this.config
+        and set c = this.config <- c
 
     [<DefaultValue>]
-    val mutable Bans: DbSet<Ban>
+    val mutable bans: DbSet<Ban>
+
+    member this.Bans
+        with get () = this.bans
+        and set b = this.bans <- b
 
     [<DefaultValue>]
-    val mutable Milestones: DbSet<Milestone>
+    val mutable milestones: DbSet<Milestone>
+
+    member this.Milestones
+        with get () = this.milestones
+        and set m = this.milestones <- m

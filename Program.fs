@@ -7,6 +7,11 @@ open Discord.Commands
 open Discord.WebSocket
 open DiscordBot.Services
 open Models
+open Microsoft.Extensions.Logging
+
+let log (msg: LogMessage) =
+    printfn "%s" <| msg.ToString()
+    Task.CompletedTask
 
 let configureServices (client: DiscordSocketClient) (config: IConfigurationRoot) (dbService: DatabaseService) =
     ServiceCollection()
@@ -17,8 +22,7 @@ let configureServices (client: DiscordSocketClient) (config: IConfigurationRoot)
         .AddSingleton<CommandService>()
         .AddSingleton<CommandHandlingService>()
         // Logging
-        .AddLogging()
-        .AddSingleton<LogService>()
+        .AddLogging(fun loggingBuilder -> loggingBuilder.AddConsole() |> ignore)
         // Extra
         .AddSingleton(
             config
@@ -33,6 +37,8 @@ let mainAsync =
     async {
         use client = new DiscordSocketClient()
 
+        client.add_Log (fun msg -> log msg)
+
         let config =
             ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -43,9 +49,6 @@ let mainAsync =
 
         let services =
             configureServices client config dbService
-
-        services.GetRequiredService<LogService>()
-        |> ignore
 
         do!
             services
