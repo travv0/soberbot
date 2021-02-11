@@ -118,13 +118,10 @@ type CommandHandlingService
 
     member this.InitializeAsync(provider) =
         async {
-            let! a =
+            do!
                 commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider)
                 |> Async.AwaitTask
-
-            for i in a do
-                for c in i.Commands do
-                    printfn "%O" c
+                |> Async.Ignore
 
             discord.add_MessageReceived (fun message -> this.MessageReceived message)
         }

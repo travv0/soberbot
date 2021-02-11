@@ -21,22 +21,12 @@ type Ban() =
     [<DefaultValue>]
     val mutable Message: string
 
-type Config() =
-    [<DefaultValue>]
-    val mutable id: uint64
-
-    member this.ID
-        with get () = this.id
-        and set id = this.id <- id
-
-    [<DefaultValue>]
-    val mutable ServerID: uint64
-
-    [<DefaultValue>]
-    val mutable PruneDays: int
-
-    [<DefaultValue>]
-    val mutable MilestoneChannelID: uint64
+[<CLIMutable>]
+type Config =
+    { ID: uint64
+      ServerID: uint64
+      PruneDays: int
+      MilestoneChannelID: uint64 }
 
 type Milestone() =
     [<DefaultValue>]

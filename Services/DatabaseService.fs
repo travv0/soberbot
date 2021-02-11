@@ -1,5 +1,6 @@
 ﻿namespace DiscordBot.Services
 
+open Microsoft.EntityFrameworkCore
 open Models
 open System
 open FSharpPlus
@@ -39,11 +40,15 @@ type DatabaseService(soberContext: SoberContext) =
     member __.GetSobriety(serverId, userId): Sobriety option =
         soberContext.Sobrieties
         |> tryFind (fun s -> s.ServerID = serverId && s.UserID = userId)
+        |> map
+            (fun s ->
+                soberContext.Entry(s).State <- EntityState.Detached
+                s)
 
     member this.RemoveSobriety(serverId, userId) =
         match this.GetSobriety(serverId, userId) with
         | Some sobriety ->
-            soberContext. |> ignore
+            soberContext.Remove(sobriety) |> ignore
             soberContext.SaveChanges() |> ignore
         | None -> ()
 
@@ -78,17 +83,19 @@ type DatabaseService(soberContext: SoberContext) =
         soberContext.Sobrieties.RemoveRange(inactiveSobrieties)
         soberContext.SaveChanges()
 
-    member __.SetPruneDays(serverId, days) =
-        match soberContext.Config
-              |> tryFind (fun c -> c.ServerID = serverId) with
+    member this.SetPruneDays(serverId, days) =
+        match this.GetConfig(serverId) with
         | None ->
-            let config = Config()
-            config.ServerID <- serverId
-            config.PruneDays <- days
-            soberContext.Config.Add(config) |> ignore
+            soberContext.Config.Add(
+                { ID = 0UL
+                  MilestoneChannelID = 0UL
+                  ServerID = serverId
+                  PruneDays = days }
+            )
+            |> ignore
         | Some config ->
-            config.PruneDays <- days
-            soberContext.Update(config) |> ignore
+            soberContext.Update({ config with PruneDays = days })
+            |> ignore
 
         soberContext.SaveChanges()
 
@@ -149,17 +156,30 @@ type DatabaseService(soberContext: SoberContext) =
                 None
         | _ -> None
 
-    member __.SetMilestoneChannel(serverId, channelId) =
-        match soberContext.Config
-              |> tryFind (fun c -> c.ServerID = serverId) with
+    member __.GetConfig(serverId): Config option =
+        soberContext.Config
+        |> tryFind (fun c -> c.ServerID = serverId)
+        |> map
+            (fun c ->
+                soberContext.Entry(c).State <- EntityState.Detached
+                c)
+
+    member this.SetMilestoneChannel(serverId, channelId) =
+        match this.GetConfig(serverId) with
         | None ->
-            let config = Config()
-            config.ServerID <- serverId
-            config.MilestoneChannelID <- channelId
-            soberContext.Config.Add(config) |> ignore
+            soberContext.Config.Add(
+                { ID = 0UL
+                  MilestoneChannelID = channelId
+                  ServerID = serverId
+                  PruneDays = 30 }
+            )
+            |> ignore
         | Some config ->
-            config.MilestoneChannelID <- channelId
-            soberContext.Update(config) |> ignore
+            soberContext.Update(
+                { config with
+                      MilestoneChannelID = channelId }
+            )
+            |> ignore
 
         soberContext.SaveChanges()
 
