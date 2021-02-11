@@ -9,7 +9,7 @@ type DatabaseService(soberContext: SoberContext) =
     member this.SetDate(serverId, userId, userName, soberDate) =
         match this.GetSobriety(serverId, userId) with
         | None ->
-            let sobriety =
+            soberContext.Sobrieties.Add(
                 { ID = 0UL
                   ServerID = serverId
                   UserID = userId
@@ -18,10 +18,9 @@ type DatabaseService(soberContext: SoberContext) =
                   ActiveDate = DateTime.Today
                   LastMilestoneDays = int (Math.Floor((DateTime.Today - soberDate).TotalDays))
                   MilestonesEnabled = true }
-
-            soberContext.Sobrieties.Add(sobriety) |> ignore
+            )
+            |> ignore
         | Some existingRecord ->
-
             soberContext.Sobrieties.Update(
                 { existingRecord with
                       SobrietyDate = soberDate
@@ -35,7 +34,6 @@ type DatabaseService(soberContext: SoberContext) =
     member __.GetSobrieties(serverId) =
         soberContext.Sobrieties
         |> Seq.filter (fun s -> s.ServerID = serverId)
-        |> toList
 
     member __.GetSobriety(serverId, userId): Sobriety option =
         soberContext.Sobrieties
@@ -52,7 +50,6 @@ type DatabaseService(soberContext: SoberContext) =
             soberContext.SaveChanges() |> ignore
         | None -> ()
 
-
     member this.UpdateActiveDate(serverId, userId) =
         match this.GetSobriety(serverId, userId) with
         | Some sobriety ->
@@ -65,20 +62,19 @@ type DatabaseService(soberContext: SoberContext) =
             soberContext.SaveChanges() |> ignore
         | None -> ()
 
-    member __.PruneInactiveUsers(serverId) =
+    member __.GetConfigs(serverId) =
+        soberContext.Config
+        |> Seq.filter (fun c -> c.ServerID = serverId)
+
+    member this.PruneInactiveUsers(serverId) =
         let pruneDays =
-            match soberContext.Config
-                  |> Seq.filter (fun c -> c.ServerID = serverId)
-                  |> toList with
+            match this.GetConfigs(serverId) |> toList with
             | (config :: _) -> config.PruneDays
             | _ -> 30
 
         let inactiveSobrieties =
-            soberContext.Sobrieties
-            |> Seq.filter
-                (fun s ->
-                    s.ServerID = serverId
-                    && s.ActiveDate < DateTime.Now.AddDays(float (-pruneDays)))
+            this.GetSobrieties(serverId)
+            |> Seq.filter (fun s -> s.ActiveDate < DateTime.Now.AddDays(float (-pruneDays)))
 
         soberContext.Sobrieties.RemoveRange(inactiveSobrieties)
         soberContext.SaveChanges()
@@ -100,40 +96,50 @@ type DatabaseService(soberContext: SoberContext) =
         soberContext.SaveChanges()
 
     member this.BanUser(serverId, userId, message) =
-        match soberContext.Bans
-              |> tryFind (fun b -> b.ServerID = serverId && b.UserID = userId) with
+        match this.GetBan(serverId, userId) with
         | None ->
-            let ban = Ban()
-            ban.ServerID <- serverId
-            ban.UserID <- userId
-            ban.Message <- message
-            soberContext.Bans.Add(ban) |> ignore
+            soberContext.Bans.Add(
+                { ID = 0UL
+                  ServerID = serverId
+                  UserID = userId
+                  Message = message }
+            )
+            |> ignore
+
             this.RemoveSobriety(serverId, userId) |> ignore
         | Some ban ->
-            ban.Message <- message
-            soberContext.Update(ban) |> ignore
+            soberContext.Update({ ban with Message = message })
+            |> ignore
 
         soberContext.SaveChanges()
 
-    member __.UnbanUser(serverId, userId) =
-        match soberContext.Bans
-              |> tryFind (fun b -> b.ServerID = serverId && b.UserID = userId) with
+    member this.UnbanUser(serverId, userId) =
+        match this.GetBan(serverId, userId) with
         | Some ban ->
             soberContext.Remove(ban) |> ignore
             soberContext.SaveChanges() |> ignore
         | None -> ()
 
-    member __.GetBanMessage(serverId, userId) =
+    member __.GetBan(serverId, userId) =
         soberContext.Bans
         |> tryFind (fun b -> b.ServerID = serverId && b.UserID = userId)
-        |> Option.map (fun ban -> ban.Message)
+        |> map
+            (fun b ->
+                soberContext.Entry(b).State <- EntityState.Detached
+                b)
+
+    member this.GetBanMessage(serverId, userId) =
+        this.GetBan(serverId, userId)
+        |> map (fun ban -> ban.Message)
+
+    member __.GetMilestones() = soberContext.Milestones
 
     member this.GetNewMilestoneName(serverId, userId) =
         match this.GetSobriety(serverId, userId) with
         | Some sobriety ->
             if sobriety.MilestonesEnabled then
                 let milestone =
-                    soberContext.Milestones
+                    this.GetMilestones()
                     |> Seq.sortByDescending (fun m -> m.Days)
                     |> tryFind
                         (fun m ->
@@ -183,9 +189,8 @@ type DatabaseService(soberContext: SoberContext) =
 
         soberContext.SaveChanges()
 
-    member __.GetMilestoneChannel(serverId) =
-        soberContext.Config
-        |> tryFind (fun c -> c.ServerID = serverId)
+    member this.GetMilestoneChannel(serverId) =
+        this.GetConfig(serverId)
         |> Option.map (fun config -> config.MilestoneChannelID)
 
     member this.EnableMilestones(serverId, userId) =

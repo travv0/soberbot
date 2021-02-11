@@ -2,24 +2,13 @@
 
 open Microsoft.EntityFrameworkCore
 open System
-open System.ComponentModel.DataAnnotations
 
-type Ban() =
-    [<DefaultValue>]
-    val mutable id: uint64
-
-    member this.ID
-        with get () = this.id
-        and set id = this.id <- id
-
-    [<DefaultValue>]
-    val mutable ServerID: uint64
-
-    [<DefaultValue>]
-    val mutable UserID: uint64
-
-    [<DefaultValue>]
-    val mutable Message: string
+[<CLIMutable>]
+type Ban =
+    { ID: uint64
+      ServerID: uint64
+      UserID: uint64
+      Message: string }
 
 [<CLIMutable>]
 type Config =
@@ -28,19 +17,8 @@ type Config =
       PruneDays: int
       MilestoneChannelID: uint64 }
 
-type Milestone() =
-    [<DefaultValue>]
-    val mutable id: uint64
-
-    member this.ID
-        with get () = this.id
-        and set id = this.id <- id
-
-    [<DefaultValue>]
-    val mutable Days: int
-
-    [<DefaultValue>]
-    val mutable Name: string
+[<CLIMutable>]
+type Milestone = { ID: uint64; Days: int; Name: string }
 
 [<CLIMutable>]
 type Sobriety =
