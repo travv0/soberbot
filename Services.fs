@@ -8,6 +8,7 @@ open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Logging
 open System.IO
 open System.Threading.Tasks
+open System
 
 let config =
     ConfigurationBuilder()
@@ -21,7 +22,7 @@ let discord =
         Task.CompletedTask
 
     let client = new DiscordSocketClient()
-    client.add_Log (fun msg -> log msg)
+    Func<_, _>(log) |> client.add_Log
     client
 
 let commands = new CommandService()

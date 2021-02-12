@@ -14,13 +14,12 @@ type UtilModule() =
                 ' ',
                 command.Aliases
                 |> toSeq
-                |> filter (fun a -> a <> command.Name)
+                |> filter ((<>) command.Name)
                 |> map (fun a -> sprintf "%s" (String.Join(", ", a)))
             )
 
         let aliasString =
-            if command.Aliases
-               |> exists (fun a -> a <> command.Name) then
+            if command.Aliases |> exists ((<>) command.Name) then
                 $" (Aliases: {aliases})"
             else
                 ""

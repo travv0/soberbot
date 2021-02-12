@@ -108,6 +108,8 @@ let initializeAsync (provider) =
             |> Async.AwaitTask
             |> Async.Ignore
 
-        Services.discord.add_MessageReceived (fun message -> messageReceived message)
-        Services.commands.add_Log (fun msg -> log msg)
+        Func<_, _>(messageReceived)
+        |> Services.discord.add_MessageReceived
+
+        Func<_, _>(log) |> Services.commands.add_Log
     }
