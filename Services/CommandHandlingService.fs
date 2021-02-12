@@ -1,4 +1,4 @@
-﻿namespace DiscordBot.Services
+namespace DiscordBot.Services
 
 open Discord
 open Discord.Commands
@@ -25,16 +25,6 @@ type CommandHandlingService
 
         printfn "%s" <| msg.ToString()
         Task.CompletedTask
-
-    let discord = discord
-
-    let commands =
-        commands.add_Log (fun msg -> log msg)
-        commands
-
-    let provider = provider
-    let databaseService = databaseService
-
 
     member __.MessageReceived(rawMessage: SocketMessage): Task =
         async {
@@ -124,4 +114,5 @@ type CommandHandlingService
                 |> Async.Ignore
 
             discord.add_MessageReceived (fun message -> this.MessageReceived message)
+            commands.add_Log (fun msg -> log msg)
         }

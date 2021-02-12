@@ -1,13 +1,13 @@
-﻿open System.IO
-open System.Threading.Tasks
-open Microsoft.Extensions.Configuration
-open Microsoft.Extensions.DependencyInjection
 open Discord
 open Discord.Commands
 open Discord.WebSocket
 open DiscordBot.Services
-open Models
+open Microsoft.Extensions.Configuration
+open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Logging
+open Models
+open System.IO
+open System.Threading.Tasks
 
 let log (msg: LogMessage) =
     printfn "%s" <| msg.ToString()

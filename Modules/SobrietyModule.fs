@@ -1,17 +1,15 @@
-﻿namespace DiscordBot.Modules
+namespace DiscordBot.Modules
 
 open Discord
 open Discord.Commands
 open DiscordBot.Services
+open FSharpPlus
 open Models
 open System
-open FSharpPlus
 open System.Threading.Tasks
 
 type SobrietyModule(databaseService: DatabaseService) =
     inherit ModuleBase<SocketCommandContext>()
-
-    let databaseService = databaseService
 
     [<Command("set"); Summary("Sets your sobriety date to a date in the MM/DD/YYYY format.")>]
     member this.Set(dateString): Task = this.Set(dateString, this.Context.User)
@@ -29,11 +27,7 @@ type SobrietyModule(databaseService: DatabaseService) =
 
             this.ReplyAsync($"Sober date set to {soberDate.ToShortDateString()} for {user.Username}")
         with _ -> this.ReplyAsync($"Please enter date in MM/DD/YYYY format")
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-        Task.CompletedTask
+        :> Task
 
     [<Command("reset");
       Alias("set");
@@ -50,12 +44,7 @@ type SobrietyModule(databaseService: DatabaseService) =
         databaseService.SetDate(this.Context.Guild.Id, user.Id, user.Username, today)
         |> ignore
 
-        this.ReplyAsync($"Sober date reset to {today.ToShortDateString()} for {user.Username}")
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-        Task.CompletedTask
+        this.ReplyAsync($"Sober date reset to {today.ToShortDateString()} for {user.Username}") :> Task
 
     member this.List(orderBy: Sobriety -> IComparable, numbered: bool) =
         let today = DateTime.Today
@@ -75,12 +64,7 @@ type SobrietyModule(databaseService: DatabaseService) =
                     let number = if numbered then $"{i + 1}. " else ""
                     sprintf "%s%s - %d day%s sober" number s.UserName soberDays (if soberDays = 1 then "" else "s"))
 
-        this.ReplyAsync(String.Join('\n', list))
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-        Task.CompletedTask
+        this.ReplyAsync(String.Join('\n', list)) :> Task
 
     [<Command("list");
       Summary("Lists all users on the server ordered by user name and how many days of sobriety they have.")>]
@@ -112,11 +96,7 @@ type SobrietyModule(databaseService: DatabaseService) =
             this.ReplyAsync(
                 sprintf "%s - %d day%s sober" sobriety.UserName soberDays (if soberDays = 1 then "" else "s")
             )
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-        Task.CompletedTask
+        :> Task
 
     [<Command("days"); Summary("Shows how many days of sobriety you have.")>]
     member this.Days(): Task = this.Days(this.Context.User, true)
@@ -134,11 +114,7 @@ type SobrietyModule(databaseService: DatabaseService) =
                else
                    "")
         )
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-        Task.CompletedTask
+        :> Task
 
     [<Command("break");
       Alias("delete");
@@ -155,24 +131,12 @@ type SobrietyModule(databaseService: DatabaseService) =
     [<Command("milestones on"); Summary("Enable milestone notifications.")>]
     member this.MilestonesOn(): Task =
         databaseService.EnableMilestones(this.Context.Guild.Id, this.Context.User.Id)
-
-        this.ReplyAsync($"Milestones enabled for {this.Context.User.Username}.")
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-        Task.CompletedTask
+        this.ReplyAsync($"Milestones enabled for {this.Context.User.Username}.") :> Task
 
     [<Command("milestones off"); Summary("Disable milestone notifications.")>]
     member this.MilestonesOff(): Task =
         databaseService.DisableMilestones(this.Context.Guild.Id, this.Context.User.Id)
-
-        this.ReplyAsync($"Milestones disabled for {this.Context.User.Username}.")
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-        Task.CompletedTask
+        this.ReplyAsync($"Milestones disabled for {this.Context.User.Username}.") :> Task
 
     [<Command("config prunedays");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
@@ -182,12 +146,7 @@ type SobrietyModule(databaseService: DatabaseService) =
         databaseService.SetPruneDays(this.Context.Guild.Id, days)
         |> ignore
 
-        this.ReplyAsync($"Users will now be removed from database after {days} days of inactivity.")
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-        Task.CompletedTask
+        this.ReplyAsync($"Users will now be removed from database after {days} days of inactivity.") :> Task
 
     [<Command("config milestonechannel");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
@@ -197,12 +156,7 @@ type SobrietyModule(databaseService: DatabaseService) =
         databaseService.SetMilestoneChannel(this.Context.Guild.Id, channel.Id)
         |> ignore
 
-        this.ReplyAsync($"Milestones will be posted to <#{channel.Id}>")
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-        Task.CompletedTask
+        this.ReplyAsync($"Milestones will be posted to <#{channel.Id}>") :> Task
 
     [<Command("config unset milestonechannel");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
@@ -212,12 +166,7 @@ type SobrietyModule(databaseService: DatabaseService) =
         databaseService.SetMilestoneChannel(this.Context.Guild.Id, 0UL)
         |> ignore
 
-        this.ReplyAsync($"Milestones will be posted to last channel user posted in.")
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-        Task.CompletedTask
+        this.ReplyAsync($"Milestones will be posted to last channel user posted in.") :> Task
 
     [<Command("ban");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
@@ -227,12 +176,7 @@ type SobrietyModule(databaseService: DatabaseService) =
         databaseService.BanUser(this.Context.Guild.Id, user.Id, message)
         |> ignore
 
-        this.ReplyAsync($"{user.Username} banned with message: {message}")
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-        Task.CompletedTask
+        this.ReplyAsync($"{user.Username} banned with message: {message}") :> Task
 
     [<Command("unban");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
@@ -240,10 +184,4 @@ type SobrietyModule(databaseService: DatabaseService) =
       Summary("Allow banned user to use the bot once again.")>]
     member this.Unban(user: IUser): Task =
         databaseService.UnbanUser(this.Context.Guild.Id, user.Id)
-
-        this.ReplyAsync($"{user.Username} has been unbanned.")
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-        Task.CompletedTask
+        this.ReplyAsync($"{user.Username} has been unbanned.") :> Task

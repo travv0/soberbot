@@ -332,3 +332,4 @@ ASALocalRun/
 *.db
 config.json
 .DS_Store
+DiscordBot.sln

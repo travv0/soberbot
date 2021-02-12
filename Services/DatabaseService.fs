@@ -1,12 +1,17 @@
-﻿namespace DiscordBot.Services
+namespace DiscordBot.Services
 
+open FSharpPlus
 open Microsoft.EntityFrameworkCore
 open Models
 open System
-open FSharpPlus
 
 type DatabaseService(soberContext: SoberContext) =
-    member this.SetDate(serverId, userId, userName, soberDate) =
+    member this.SetDate(serverId, userId, userName, soberDate: DateTime) =
+        let lastMilestoneDays =
+            (DateTime.Today - soberDate).TotalDays
+            |> floor
+            |> int
+
         match this.GetSobriety(serverId, userId) with
         | None ->
             soberContext.Sobrieties.Add(
@@ -16,7 +21,7 @@ type DatabaseService(soberContext: SoberContext) =
                   UserName = userName
                   SobrietyDate = soberDate
                   ActiveDate = DateTime.Today
-                  LastMilestoneDays = int (Math.Floor((DateTime.Today - soberDate).TotalDays))
+                  LastMilestoneDays = lastMilestoneDays
                   MilestonesEnabled = true }
             )
             |> ignore
@@ -25,7 +30,7 @@ type DatabaseService(soberContext: SoberContext) =
                 { existingRecord with
                       SobrietyDate = soberDate
                       UserName = userName
-                      LastMilestoneDays = int (Math.Floor((DateTime.Today - soberDate).TotalDays)) }
+                      LastMilestoneDays = lastMilestoneDays }
             )
             |> ignore
 
@@ -68,9 +73,9 @@ type DatabaseService(soberContext: SoberContext) =
 
     member this.PruneInactiveUsers(serverId) =
         let pruneDays =
-            match this.GetConfigs(serverId) |> toList with
-            | (config :: _) -> config.PruneDays
-            | _ -> 30
+            match this.GetConfig(serverId) with
+            | Some config -> config.PruneDays
+            | None -> 30
 
         let inactiveSobrieties =
             this.GetSobrieties(serverId)
@@ -144,7 +149,9 @@ type DatabaseService(soberContext: SoberContext) =
                     |> tryFind
                         (fun m ->
                             m.Days > sobriety.LastMilestoneDays
-                            && (int << round) (DateTime.Today - sobriety.SobrietyDate).TotalDays
+                            && (DateTime.Today - sobriety.SobrietyDate).TotalDays
+                               |> floor
+                               |> int
                                >= m.Days)
 
                 match milestone with

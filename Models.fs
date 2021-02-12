@@ -1,4 +1,4 @@
-﻿module Models
+module Models
 
 open Microsoft.EntityFrameworkCore
 open System

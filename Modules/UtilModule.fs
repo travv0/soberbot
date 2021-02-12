@@ -1,16 +1,13 @@
-﻿namespace DiscordBot.Modules
+namespace DiscordBot.Modules
 
 open Discord.Commands
 open Discord.WebSocket
+open FSharpPlus
 open System
 open System.Threading.Tasks
-open FSharpPlus
 
 type UtilModule(commandService: CommandService, discord: DiscordSocketClient) =
     inherit ModuleBase<SocketCommandContext>()
-
-    member val commandService = commandService
-    member val discord = discord
 
     member _.BuildCommandString(command: CommandInfo) =
         let aliases =
