@@ -104,9 +104,4 @@ type UtilModule(commandService: CommandService, discord: DiscordSocketClient) =
             )
         |> ignore
 
-        this.ReplyAsync(null, false, embedBuilder.Build())
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-        Task.CompletedTask
+        this.ReplyAsync(null, false, embedBuilder.Build()) :> Task
