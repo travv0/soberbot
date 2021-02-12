@@ -2,7 +2,6 @@ namespace DiscordBot.Modules
 
 open Discord
 open Discord.Commands
-open DiscordBot.Services
 open FSharpPlus
 open Models
 open System

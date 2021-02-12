@@ -1,15 +1,14 @@
 namespace DiscordBot.Modules
 
 open Discord.Commands
-open Discord.WebSocket
 open FSharpPlus
 open System
 open System.Threading.Tasks
 
-type UtilModule(commandService: CommandService, discord: DiscordSocketClient) =
+type UtilModule() =
     inherit ModuleBase<SocketCommandContext>()
 
-    member _.BuildCommandString(command: CommandInfo) =
+    let buildCommandString (command: CommandInfo) =
         let aliases =
             String.Join(
                 ' ',
@@ -46,7 +45,7 @@ type UtilModule(commandService: CommandService, discord: DiscordSocketClient) =
     [<Command("help"); Summary("Shows this command list.")>]
     member this.Help(): Task =
         let commands =
-            commandService.Commands
+            Services.commands.Commands
             |> filter
                 (fun c ->
                     not (String.IsNullOrEmpty(c.Summary))
@@ -63,7 +62,7 @@ type UtilModule(commandService: CommandService, discord: DiscordSocketClient) =
                 Discord
                     .EmbedFieldBuilder()
                     .WithIsInline(false)
-                    .WithName(this.BuildCommandString(command))
+                    .WithName(buildCommandString command)
                     .WithValue(command.Summary)
 
             embedBuilder.AddField(embedFieldBuilder) |> ignore
@@ -75,7 +74,7 @@ type UtilModule(commandService: CommandService, discord: DiscordSocketClient) =
             embedBuilder.WithTitle("Admin Commands") |> ignore
 
             let adminCommands =
-                commandService.Commands
+                Services.commands.Commands
                 |> filter
                     (fun c ->
                         not (String.IsNullOrEmpty(c.Summary))
@@ -87,7 +86,7 @@ type UtilModule(commandService: CommandService, discord: DiscordSocketClient) =
                     Discord
                         .EmbedFieldBuilder()
                         .WithIsInline(false)
-                        .WithName(this.BuildCommandString(command))
+                        .WithName(buildCommandString command)
                         .WithValue(command.Summary)
 
                 embedBuilder.AddField(embedFieldBuilder) |> ignore
@@ -96,7 +95,7 @@ type UtilModule(commandService: CommandService, discord: DiscordSocketClient) =
             .WithDescription("To use the bot, tag it and specify one of the commands shown below.  "
                              + "Replace the parts of commands surrounded by <> with your own text.\n"
                              + "**Example:** "
-                             + discord.CurrentUser.Mention
+                             + Services.discord.CurrentUser.Mention
                              + " set 3/31/2020")
             .WithFooter(
                 "Source code can be found at https://github.com/travv0/soberbot\n"

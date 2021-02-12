@@ -1,5 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
@@ -8,24 +7,21 @@
     <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)RuleSet.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <CodeAnalysisRuleSet>RuleSet.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <CodeAnalysisRuleSet>RuleSet.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-
   <ItemGroup>
+    <Compile Include="Services.fs" />
     <Compile Include="Models.fs" />
     <Compile Include="Database.fs" />
-    <Compile Include="Services/CommandHandlingService.fs" />
+    <Compile Include="CommandHandling.fs" />
     <Compile Include="Modules/UtilModule.fs" />
     <Compile Include="Modules/SobrietyModule.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.1.1" />
     <PackageReference Include="Discord.Net.WebSocket" Version="2.1.1" />
@@ -41,5 +37,4 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
   </ItemGroup>
-
 </Project>
