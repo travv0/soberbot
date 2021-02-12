@@ -1,4 +1,4 @@
-namespace DiscordBot.Modules
+namespace SoberBot.Modules
 
 open Discord.Commands
 open FSharpPlus

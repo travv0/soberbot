@@ -1,4 +1,4 @@
-namespace DiscordBot.Modules
+namespace SoberBot.Modules
 
 open Discord
 open Discord.Commands
