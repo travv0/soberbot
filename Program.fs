@@ -13,7 +13,7 @@ let log (msg: LogMessage) =
     printfn "%s" <| msg.ToString()
     Task.CompletedTask
 
-let configureServices (client: DiscordSocketClient) (config: IConfigurationRoot) (dbService: DatabaseService) =
+let configureServices (client: DiscordSocketClient) (config: IConfigurationRoot) =
     ServiceCollection()
         // Base
         .AddSingleton(
@@ -26,10 +26,6 @@ let configureServices (client: DiscordSocketClient) (config: IConfigurationRoot)
         // Extra
         .AddSingleton(
             config
-        )
-        // Add additional services here...
-        .AddSingleton(
-            dbService
         )
         .BuildServiceProvider()
 
@@ -45,10 +41,7 @@ let mainAsync =
                 .AddJsonFile("config.json")
                 .Build()
 
-        let dbService = DatabaseService(new SoberContext())
-
-        let services =
-            configureServices client config dbService
+        let services = configureServices client config
 
         do!
             services

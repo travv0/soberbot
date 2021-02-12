@@ -7,13 +7,7 @@ open System
 open System.Reflection
 open System.Threading.Tasks
 
-type CommandHandlingService
-    (
-        provider: IServiceProvider,
-        discord: DiscordSocketClient,
-        commands: CommandService,
-        databaseService: DatabaseService
-    ) =
+type CommandHandlingService(provider: IServiceProvider, discord: DiscordSocketClient, commands: CommandService) =
     let log (msg: LogMessage) =
         // Return an error message for async commands
         match msg.Exception with
@@ -37,13 +31,13 @@ type CommandHandlingService
                         message.HasMentionPrefix(discord.CurrentUser, &argPos)
 
                     let context = SocketCommandContext(discord, message)
-                    databaseService.UpdateActiveDate(context.Guild.Id, message.Author.Id)
+                    Database.updateActiveDate context.Guild.Id message.Author.Id
 
                     if not isCommand then
-                        match databaseService.GetNewMilestoneName(context.Guild.Id, message.Author.Id) with
+                        match Database.getNewMilestoneName context.Guild.Id message.Author.Id with
                         | Some milestoneName ->
                             let milestoneChannel =
-                                databaseService.GetMilestoneChannel(context.Guild.Id)
+                                Database.getMilestoneChannel context.Guild.Id
                                 |> Option.defaultValue 0UL
 
                             let milestoneMessage =
@@ -65,7 +59,7 @@ type CommandHandlingService
                                     |> Async.Ignore
                         | None -> ()
                     else
-                        match databaseService.GetBanMessage(context.Guild.Id, message.Author.Id) with
+                        match Database.getBanMessage context.Guild.Id message.Author.Id with
                         | Some banMessage ->
                             do!
                                 (context.Channel :?> SocketTextChannel)
@@ -73,7 +67,7 @@ type CommandHandlingService
                                 |> Async.AwaitTask
                                 |> Async.Ignore
                         | None ->
-                            databaseService.PruneInactiveUsers(context.Guild.Id)
+                            Database.pruneInactiveUsers context.Guild.Id
                             |> ignore
 
                             while (message.Content.[argPos] = ' ') do

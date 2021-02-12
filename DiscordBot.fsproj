@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <Compile Include="Models.fs" />
-    <Compile Include="Services/DatabaseService.fs" />
+    <Compile Include="Database.fs" />
     <Compile Include="Services/CommandHandlingService.fs" />
     <Compile Include="Modules/UtilModule.fs" />
     <Compile Include="Modules/SobrietyModule.fs" />
