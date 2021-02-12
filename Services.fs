@@ -3,17 +3,21 @@ module Services
 open Discord
 open Discord.Commands
 open Discord.WebSocket
-open FSharp.Data
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Logging
 open System.IO
 open System.Threading.Tasks
 open System
+open System.Text.Json
 
-type Config = JsonProvider<"""{"token": "token"}""">
+type Config = { Token: string }
 
 let config =
-    File.ReadAllText("config.json") |> Config.Parse
+    let options =
+        JsonSerializerOptions(PropertyNamingPolicy = JsonNamingPolicy.CamelCase)
+
+    let json = File.ReadAllText("config.json")
+    JsonSerializer.Deserialize<Config>(json, options)
 
 let discord =
     let log (msg: LogMessage) =
