@@ -6,7 +6,7 @@ let mainAsync =
         do! CommandHandling.initializeAsync Services.provider
 
         do!
-            Services.discord.LoginAsync(TokenType.Bot, Services.config.["token"])
+            Services.discord.LoginAsync(TokenType.Bot, Services.config.Token)
             |> Async.AwaitTask
 
         do! Services.discord.StartAsync() |> Async.AwaitTask

@@ -3,18 +3,17 @@ module Services
 open Discord
 open Discord.Commands
 open Discord.WebSocket
-open Microsoft.Extensions.Configuration
+open FSharp.Data
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Logging
 open System.IO
 open System.Threading.Tasks
 open System
 
+type Config = JsonProvider<"""{"token": "token"}""">
+
 let config =
-    ConfigurationBuilder()
-        .SetBasePath(Directory.GetCurrentDirectory())
-        .AddJsonFile("config.json")
-        .Build()
+    File.ReadAllText("config.json") |> Config.Parse
 
 let discord =
     let log (msg: LogMessage) =
