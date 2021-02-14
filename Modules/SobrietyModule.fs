@@ -14,7 +14,7 @@ type SobrietyModule() =
     member this.Set(dateString): Task =
         this.Set("", dateString, this.Context.User)
 
-    [<Command("set"); Summary("Sets your sobriety date to a date in the MM/DD/YYYY format.")>]
+    [<Command("set"); Summary("Sets your sobriety date for the given addiction to a date in the MM/DD/YYYY format.")>]
     member this.Set(addiction, dateString): Task =
         this.Set(addiction, dateString, this.Context.User)
 
@@ -59,7 +59,7 @@ type SobrietyModule() =
     [<Command("reset");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
-      Summary("Resets a given user's sobriety date to today.")>]
+      Summary("Resets a given user's sobriety date to today for the given addiction.")>]
     member this.Reset(addiction, user: IUser): Task =
         let today = DateTime.Today
 
@@ -68,7 +68,7 @@ type SobrietyModule() =
 
         this.ReplyAsync($"Sober date reset to {today.ToShortDateString()} for {user.Username}") :> Task
 
-    member this.List(orderBy: Sobriety -> IComparable, numbered: bool) =
+    member this.List(orderBy: Sobriety -> #IComparable, numbered: bool) =
         let today = DateTime.Today
 
         let sobrieties =
@@ -102,13 +102,12 @@ type SobrietyModule() =
 
     [<Command("list");
       Summary("Lists all users on the server ordered by user name and how many days of sobriety they have.")>]
-    member this.List(): Task =
-        this.List((fun s -> s.UserName :> IComparable), false)
+    member this.List(): Task = this.List((fun s -> s.UserName), false)
 
     [<Command("leaderboard");
       Summary("Lists all users on the server ordered by sober time and how many days of sobriety they have.")>]
     member this.Leaderboard(): Task =
-        this.List((fun s -> s.SobrietyDate :> IComparable), true)
+        this.List((fun s -> s.SobrietyDate), true)
 
     member this.Days(user: IUser, isSelf, sobrietyType) =
         let today = DateTime.Today
@@ -181,7 +180,7 @@ type SobrietyModule() =
     member this.Date(addiction): Task =
         this.Date(this.Context.User, true, addiction)
 
-    [<Command("date"); Summary("Shows a given user's sobriety date.")>]
+    [<Command("date"); Summary("Shows a given user's sobriety date for the given addiction.")>]
     member this.Date(addiction, user: IUser): Task = this.Date(user, false, addiction)
 
     member this.Delete(user: IUser, isSelf, sobrietyType) =
@@ -209,7 +208,7 @@ type SobrietyModule() =
 
     [<Command("break");
       Alias("delete");
-      Summary("Take a break from sobriety from given addiction and remove yourself from the database. :(")>]
+      Summary("Take a break from sobriety from the given addiction and remove yourself from the database. :(")>]
     member this.Delete(addiction): Task =
         this.Delete(this.Context.User, true, addiction)
 
@@ -224,7 +223,7 @@ type SobrietyModule() =
       Alias("delete");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
-      Summary("Remove a given user from the database.")>]
+      Summary("Remove a given user from the database for the given addiction.")>]
     member this.Delete(addiction, user): Task = this.Delete(user, false, addiction)
 
     [<Command("milestones on"); Summary("Enable milestone notifications.")>]
