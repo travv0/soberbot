@@ -2,6 +2,7 @@ module Models
 
 open Microsoft.EntityFrameworkCore
 open System
+open Microsoft.Extensions.Logging
 
 [<CLIMutable>]
 type Ban =
@@ -36,7 +37,9 @@ type SoberContext() =
     inherit DbContext()
 
     override __.OnConfiguring(optionsBuilder) =
-        optionsBuilder.UseSqlite("Data Source=soberbot.db")
+        optionsBuilder
+            .UseSqlite("Data Source=soberbot.db")
+            .LogTo(action = Action<_>(Console.WriteLine), minimumLevel = LogLevel.Warning)
         |> ignore
 
     [<DefaultValue>]

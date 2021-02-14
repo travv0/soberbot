@@ -8,20 +8,42 @@ open System
 let soberContext = new SoberContext()
 
 let getServerSobrieties serverId =
-    soberContext.Sobrieties
-    |> Seq.filter (fun s -> s.ServerID = serverId)
-    |> map
+    query {
+        for sobriety in soberContext.Sobrieties do
+            where (sobriety.ServerID = serverId)
+    }
+    |> Seq.map
         (fun s ->
             soberContext.Entry(s).State <- EntityState.Detached
             s)
 
 let getSobrieties serverId userId =
-    getServerSobrieties serverId
-    |> Seq.filter (fun s -> s.UserID = userId)
+    query {
+        for sobriety in soberContext.Sobrieties do
+            where (
+                sobriety.ServerID = serverId
+                && sobriety.UserID = userId
+            )
+    }
+    |> Seq.map
+        (fun s ->
+            soberContext.Entry(s).State <- EntityState.Detached
+            s)
 
 let getSobriety serverId userId sobrietyType: Sobriety option =
-    getSobrieties serverId userId
-    |> tryFind (fun s -> s.Type = sobrietyType)
+    query {
+        for sobriety in soberContext.Sobrieties do
+            where (
+                sobriety.ServerID = serverId
+                && sobriety.UserID = userId
+                && sobriety.Type = sobrietyType
+            )
+    }
+    |> tryHead
+    |> map
+        (fun s ->
+            soberContext.Entry(s).State <- EntityState.Detached
+            s)
 
 let setDate serverId userId userName (soberDate: DateTime) sobrietyType =
     let lastMilestoneDays =
@@ -75,8 +97,11 @@ let updateActiveDates serverId userId =
         soberContext.SaveChanges() |> ignore
 
 let getConfig serverId: Config option =
-    soberContext.Config
-    |> tryFind (fun c -> c.ServerID = serverId)
+    query {
+        for config in soberContext.Config do
+            where (config.ServerID = serverId)
+    }
+    |> tryHead
     |> map
         (fun c ->
             soberContext.Entry(c).State <- EntityState.Detached
@@ -112,8 +137,11 @@ let setPruneDays serverId days =
     soberContext.SaveChanges()
 
 let getBan serverId userId =
-    soberContext.Bans
-    |> tryFind (fun b -> b.ServerID = serverId && b.UserID = userId)
+    query {
+        for ban in soberContext.Bans do
+            where (ban.ServerID = serverId && ban.UserID = userId)
+    }
+    |> tryHead
     |> map
         (fun b ->
             soberContext.Entry(b).State <- EntityState.Detached

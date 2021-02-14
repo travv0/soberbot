@@ -85,8 +85,10 @@ type SobrietyModule() =
         let today = DateTime.Today
 
         let sobrieties =
-            Database.getServerSobrieties this.Context.Guild.Id
-            |> sortBy orderBy
+            query {
+                for sobriety in Database.getServerSobrieties this.Context.Guild.Id do
+                    sortBy (orderBy sobriety)
+            }
 
         let list =
             sobrieties
