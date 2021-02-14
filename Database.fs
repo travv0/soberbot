@@ -10,26 +10,18 @@ let soberContext = new SoberContext()
 let getServerSobrieties serverId =
     soberContext.Sobrieties
     |> Seq.filter (fun s -> s.ServerID = serverId)
+    |> map
+        (fun s ->
+            soberContext.Entry(s).State <- EntityState.Detached
+            s)
 
 let getSobrieties serverId userId =
-    soberContext.Sobrieties
-    |> Seq.filter (fun s -> s.ServerID = serverId && s.UserID = userId)
-    |> map
-        (fun s ->
-            soberContext.Entry(s).State <- EntityState.Detached
-            s)
+    getServerSobrieties serverId
+    |> Seq.filter (fun s -> s.UserID = userId)
 
 let getSobriety serverId userId sobrietyType: Sobriety option =
-    soberContext.Sobrieties
-    |> tryFind
-        (fun s ->
-            s.ServerID = serverId
-            && s.UserID = userId
-            && s.Type = sobrietyType)
-    |> map
-        (fun s ->
-            soberContext.Entry(s).State <- EntityState.Detached
-            s)
+    getSobrieties serverId userId
+    |> tryFind (fun s -> s.Type = sobrietyType)
 
 let setDate serverId userId userName (soberDate: DateTime) sobrietyType =
     let lastMilestoneDays =
@@ -81,10 +73,6 @@ let updateActiveDates serverId userId =
             |> ignore
 
         soberContext.SaveChanges() |> ignore
-
-let getConfigs serverId =
-    soberContext.Config
-    |> Seq.filter (fun c -> c.ServerID = serverId)
 
 let getConfig serverId: Config option =
     soberContext.Config
@@ -160,7 +148,12 @@ let getBanMessage serverId userId =
     getBan serverId userId
     |> map (fun ban -> ban.Message)
 
-let getMilestones () = soberContext.Milestones
+let getMilestones () =
+    soberContext.Milestones
+    |> Seq.map
+        (fun m ->
+            soberContext.Entry(m).State <- EntityState.Detached
+            m)
 
 let getNewMilestoneNames serverId userId: (string * string) list =
     match getSobrieties serverId userId |> toList with
