@@ -14,15 +14,15 @@ type SobrietyModule() =
     member this.Set(dateString): Task =
         this.Set("", dateString, this.Context.User)
 
-    [<Command("set"); Summary("Sets your sobriety date for the given addiction to a date in the MM/DD/YYYY format.")>]
-    member this.Set(addiction, dateString): Task =
-        this.Set(addiction, dateString, this.Context.User)
-
     [<Command("set");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Sets a given user's sobriety date to a date in the MM/DD/YYYY format.")>]
     member this.Set(dateString, user): Task = this.Set("", dateString, user)
+
+    [<Command("set"); Summary("Sets your sobriety date for the given addiction to a date in the MM/DD/YYYY format.")>]
+    member this.Set(addiction, dateString): Task =
+        this.Set(addiction, dateString, this.Context.User)
 
     [<Command("set");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
@@ -47,21 +47,19 @@ type SobrietyModule() =
         :> Task
 
     [<Command("reset");
-      Alias("set");
       Summary("Resets your sobriety date to today.  Because of timezones, this might be different than the date where you are.")>]
     member this.Reset(): Task = this.Reset(this.Context.User :> IUser)
-
-    [<Command("reset");
-      Alias("set");
-      Summary("Resets your sobriety date to today for the given addiction.  Because of timezones, this might be different than the date where you are.")>]
-    member this.Reset(addiction): Task =
-        this.Reset(addiction, this.Context.User)
 
     [<Command("reset");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Resets a given user's sobriety date to today.")>]
     member this.Reset(user: IUser): Task = this.Reset("", user)
+
+    [<Command("reset");
+      Summary("Resets your sobriety date to today for the given addiction.  Because of timezones, this might be different than the date where you are.")>]
+    member this.Reset(addiction): Task =
+        this.Reset(addiction, this.Context.User)
 
     [<Command("reset");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
@@ -223,16 +221,16 @@ type SobrietyModule() =
 
     [<Command("break");
       Alias("delete");
-      Summary("Take a break from sobriety from the given addiction and remove yourself from the database. :(")>]
-    member this.Delete(addiction): Task =
-        this.Delete(this.Context.User, true, addiction)
-
-    [<Command("break");
-      Alias("delete");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Remove a given user from the database.")>]
     member this.Delete(user): Task = this.Delete(user, false, "")
+
+    [<Command("break");
+      Alias("delete");
+      Summary("Take a break from sobriety from the given addiction and remove yourself from the database. :(")>]
+    member this.Delete(addiction): Task =
+        this.Delete(this.Context.User, true, addiction)
 
     [<Command("break");
       Alias("delete");
