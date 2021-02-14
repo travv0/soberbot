@@ -35,7 +35,14 @@ type SobrietyModule() =
             Database.setDate this.Context.Guild.Id user.Id user.Username soberDate addiction
             |> ignore
 
-            this.ReplyAsync($"Sober date set to {soberDate.ToShortDateString()} for {user.Username}")
+            let sobrietyTypeMessage =
+                match addiction with
+                | "" -> ""
+                | sobrietyType -> sprintf " for %s" sobrietyType
+
+            this.ReplyAsync(
+                $"Sober date set to {soberDate.ToShortDateString()}{sobrietyTypeMessage} for {user.Username}"
+            )
         with _ -> this.ReplyAsync($"Please enter date in MM/DD/YYYY format")
         :> Task
 
@@ -66,7 +73,13 @@ type SobrietyModule() =
         Database.setDate this.Context.Guild.Id user.Id user.Username today addiction
         |> ignore
 
-        this.ReplyAsync($"Sober date reset to {today.ToShortDateString()} for {user.Username}") :> Task
+        let sobrietyTypeMessage =
+            match addiction with
+            | "" -> ""
+            | sobrietyType -> sprintf " for %s" sobrietyType
+
+        this.ReplyAsync($"Sober date reset to {today.ToShortDateString()}{sobrietyTypeMessage} for {user.Username}")
+        :> Task
 
     member this.List(orderBy: Sobriety -> #IComparable, numbered: bool) =
         let today = DateTime.Today
