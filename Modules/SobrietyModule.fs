@@ -79,14 +79,7 @@ type SobrietyModule() =
         let today = DateTime.Today
 
         match Database.getSobriety this.Context.Guild.Id user.Id with
-        | None ->
-            this.ReplyAsync(
-                $"No date set for {user.Username}."
-                + (if isSelf then
-                       "  Use the set or reset command to set your start date."
-                   else
-                       "")
-            )
+        | None -> this.SendNoDateMessage(user, isSelf)
         | Some sobriety ->
             let soberDays =
                 Math.Floor((today - sobriety.SobrietyDate).TotalDays)
@@ -102,6 +95,28 @@ type SobrietyModule() =
 
     [<Command("days"); Summary("Shows how many days of sobriety a given user has.")>]
     member this.Days(user): Task = this.Days(user, false)
+
+    member this.SendNoDateMessage(user: IUser, isSelf) =
+        this.ReplyAsync(
+            $"No date set for {user.Username}."
+            + (if isSelf then
+                   "  Use the set or reset command to set your start date."
+               else
+                   "")
+        )
+
+    member this.Date(user: IUser, isSelf) =
+        match Database.getSobriety this.Context.Guild.Id user.Id with
+        | None -> this.SendNoDateMessage(user, isSelf)
+        | Some sobriety ->
+            this.ReplyAsync($"{user.Username} has been sober since {sobriety.SobrietyDate.ToShortDateString()}")
+
+    [<Command("date"); Summary("Shows your sobriety date.")>]
+    member this.Date(): Task =
+        this.Date(this.Context.User, true) :> Task
+
+    [<Command("date"); Summary("Shows a given user's sobriety date.")>]
+    member this.Date(user: IUser): Task = this.Date(user, false) :> Task
 
     member this.Delete(user: IUser, isSelf) =
         Database.removeSobriety this.Context.Guild.Id user.Id
