@@ -29,7 +29,8 @@ type Sobriety =
       SobrietyDate: DateTime
       ActiveDate: DateTime
       LastMilestoneDays: int
-      MilestonesEnabled: bool }
+      MilestonesEnabled: bool
+      Type: string }
 
 type SoberContext() =
     inherit DbContext()

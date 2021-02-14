@@ -66,11 +66,30 @@ type UtilModule() =
 
             embedBuilder.AddField(embedFieldBuilder) |> ignore
 
+
+        embedBuilder
+            .WithDescription("To use the bot, tag it and specify one of the commands shown below.  "
+                             + "Replace the parts of commands surrounded by <> with your own text.\n"
+                             + "**Example:** "
+                             + Services.discord.CurrentUser.Mention
+                             + " set 3/31/2020")
+            .WithFooter(
+                "Source code can be found at https://github.com/travv0/soberbot\n"
+                + "Please report any bugs at https://github.com/travv0/soberbot/issues"
+            )
+        |> ignore
+
+        this.ReplyAsync(null, false, embedBuilder.Build())
+        |> Async.AwaitTask
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
         let isAdmin =
             this.Context.User.Id = this.Context.Guild.OwnerId
 
         if isAdmin then
-            embedBuilder.WithTitle("Admin Commands") |> ignore
+            let adminEmbedBuilder =
+                Discord.EmbedBuilder().WithTitle("Admin Commands")
 
             let adminCommands =
                 Services.commands.Commands
@@ -88,18 +107,9 @@ type UtilModule() =
                         .WithName(buildCommandString command)
                         .WithValue(command.Summary)
 
-                embedBuilder.AddField(embedFieldBuilder) |> ignore
+                adminEmbedBuilder.AddField(embedFieldBuilder)
+                |> ignore
 
-        embedBuilder
-            .WithDescription("To use the bot, tag it and specify one of the commands shown below.  "
-                             + "Replace the parts of commands surrounded by <> with your own text.\n"
-                             + "**Example:** "
-                             + Services.discord.CurrentUser.Mention
-                             + " set 3/31/2020")
-            .WithFooter(
-                "Source code can be found at https://github.com/travv0/soberbot\n"
-                + "Please report any bugs at https://github.com/travv0/soberbot/issues"
-            )
-        |> ignore
-
-        this.ReplyAsync(null, false, embedBuilder.Build()) :> Task
+            this.ReplyAsync(null, false, adminEmbedBuilder.Build()) :> Task
+        else
+            Task.CompletedTask

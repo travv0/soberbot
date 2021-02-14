@@ -7,25 +7,37 @@ open System
 
 let soberContext = new SoberContext()
 
-let getSobrieties serverId =
+let getServerSobrieties serverId =
     soberContext.Sobrieties
     |> Seq.filter (fun s -> s.ServerID = serverId)
 
-let getSobriety serverId userId: Sobriety option =
+let getSobrieties serverId userId =
     soberContext.Sobrieties
-    |> tryFind (fun s -> s.ServerID = serverId && s.UserID = userId)
+    |> Seq.filter (fun s -> s.ServerID = serverId && s.UserID = userId)
     |> map
         (fun s ->
             soberContext.Entry(s).State <- EntityState.Detached
             s)
 
-let setDate serverId userId userName (soberDate: DateTime) =
+let getSobriety serverId userId sobrietyType: Sobriety option =
+    soberContext.Sobrieties
+    |> tryFind
+        (fun s ->
+            s.ServerID = serverId
+            && s.UserID = userId
+            && s.Type = sobrietyType)
+    |> map
+        (fun s ->
+            soberContext.Entry(s).State <- EntityState.Detached
+            s)
+
+let setDate serverId userId userName (soberDate: DateTime) sobrietyType =
     let lastMilestoneDays =
         (DateTime.Today - soberDate).TotalDays
         |> floor
         |> int
 
-    match getSobriety serverId userId with
+    match getSobriety serverId userId sobrietyType with
     | None ->
         soberContext.Sobrieties.Add(
             { ID = 0UL
@@ -35,7 +47,8 @@ let setDate serverId userId userName (soberDate: DateTime) =
               SobrietyDate = soberDate
               ActiveDate = DateTime.Today
               LastMilestoneDays = lastMilestoneDays
-              MilestonesEnabled = true }
+              MilestonesEnabled = true
+              Type = sobrietyType }
         )
         |> ignore
     | Some existingRecord ->
@@ -49,24 +62,25 @@ let setDate serverId userId userName (soberDate: DateTime) =
 
     soberContext.SaveChanges()
 
-let removeSobriety serverId userId =
-    match getSobriety serverId userId with
+let removeSobriety serverId userId sobrietyType =
+    match getSobriety serverId userId sobrietyType with
     | Some sobriety ->
         soberContext.Remove(sobriety) |> ignore
         soberContext.SaveChanges() |> ignore
     | None -> ()
 
-let updateActiveDate serverId userId =
-    match getSobriety serverId userId with
-    | Some sobriety ->
-        soberContext.Update(
-            { sobriety with
-                  ActiveDate = DateTime.Now }
-        )
-        |> ignore
+let updateActiveDates serverId userId =
+    match getSobrieties serverId userId |> toList with
+    | [] -> ()
+    | sobrieties ->
+        for sobriety in sobrieties do
+            soberContext.Update(
+                { sobriety with
+                      ActiveDate = DateTime.Now }
+            )
+            |> ignore
 
         soberContext.SaveChanges() |> ignore
-    | None -> ()
 
 let getConfigs serverId =
     soberContext.Config
@@ -87,7 +101,7 @@ let pruneInactiveUsers serverId =
         | None -> 30
 
     let inactiveSobrieties =
-        getSobrieties serverId
+        getServerSobrieties serverId
         |> Seq.filter (fun s -> s.ActiveDate < DateTime.Now.AddDays(float (-pruneDays)))
 
     soberContext.Sobrieties.RemoveRange(inactiveSobrieties)
@@ -148,35 +162,34 @@ let getBanMessage serverId userId =
 
 let getMilestones () = soberContext.Milestones
 
-let getNewMilestoneName serverId userId =
-    match getSobriety serverId userId with
-    | Some sobriety ->
-        if sobriety.MilestonesEnabled then
-            let milestone =
-                getMilestones ()
-                |> Seq.sortByDescending (fun m -> m.Days)
-                |> tryFind
-                    (fun m ->
-                        m.Days > sobriety.LastMilestoneDays
-                        && (DateTime.Today - sobriety.SobrietyDate).TotalDays
-                           |> floor
-                           |> int
-                           >= m.Days)
+let getNewMilestoneNames serverId userId: (string * string) list =
+    match getSobrieties serverId userId |> toList with
+    | [] -> []
+    | sobrieties ->
+        [ for sobriety in sobrieties do
+              if sobriety.MilestonesEnabled then
+                  let milestone =
+                      getMilestones ()
+                      |> Seq.sortByDescending (fun m -> m.Days)
+                      |> tryFind
+                          (fun m ->
+                              m.Days > sobriety.LastMilestoneDays
+                              && (DateTime.Today - sobriety.SobrietyDate).TotalDays
+                                 |> floor
+                                 |> int
+                                 >= m.Days)
 
-            match milestone with
-            | Some milestone ->
-                soberContext.Update(
-                    { sobriety with
-                          LastMilestoneDays = milestone.Days }
-                )
-                |> ignore
+                  match milestone with
+                  | Some milestone ->
+                      soberContext.Update(
+                          { sobriety with
+                                LastMilestoneDays = milestone.Days }
+                      )
+                      |> ignore
 
-                soberContext.SaveChanges() |> ignore
-                Some(milestone.Name)
-            | None -> None
-        else
-            None
-    | _ -> None
+                      soberContext.SaveChanges() |> ignore
+                      yield (sobriety.Type, milestone.Name)
+                  | None -> () ]
 
 let setMilestoneChannel serverId channelId =
     match getConfig serverId with
@@ -202,25 +215,27 @@ let getMilestoneChannel serverId =
     |> Option.map (fun config -> config.MilestoneChannelID)
 
 let enableMilestones serverId userId =
-    match getSobriety serverId userId with
-    | None -> ()
-    | Some sobriety ->
-        soberContext.Update(
-            { sobriety with
-                  MilestonesEnabled = true }
-        )
-        |> ignore
+    match getSobrieties serverId userId |> toList with
+    | [] -> ()
+    | sobrieties ->
+        for sobriety in sobrieties do
+            soberContext.Update(
+                { sobriety with
+                      MilestonesEnabled = true }
+            )
+            |> ignore
 
         soberContext.SaveChanges() |> ignore
 
 let disableMilestones serverId userId =
-    match getSobriety serverId userId with
-    | None -> ()
-    | Some sobriety ->
-        soberContext.Update(
-            { sobriety with
-                  MilestonesEnabled = false }
-        )
-        |> ignore
+    match getSobrieties serverId userId |> toList with
+    | [] -> ()
+    | sobrieties ->
+        for sobriety in sobrieties do
+            soberContext.Update(
+                { sobriety with
+                      MilestonesEnabled = false }
+            )
+            |> ignore
 
         soberContext.SaveChanges() |> ignore

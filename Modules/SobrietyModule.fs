@@ -11,17 +11,28 @@ type SobrietyModule() =
     inherit ModuleBase<SocketCommandContext>()
 
     [<Command("set"); Summary("Sets your sobriety date to a date in the MM/DD/YYYY format.")>]
-    member this.Set(dateString): Task = this.Set(dateString, this.Context.User)
+    member this.Set(dateString): Task =
+        this.Set("", dateString, this.Context.User)
+
+    [<Command("set"); Summary("Sets your sobriety date to a date in the MM/DD/YYYY format.")>]
+    member this.Set(addiction, dateString): Task =
+        this.Set(addiction, dateString, this.Context.User)
 
     [<Command("set");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Sets a given user's sobriety date to a date in the MM/DD/YYYY format.")>]
-    member this.Set(dateString, user): Task =
+    member this.Set(dateString, user): Task = this.Set("", dateString, user)
+
+    [<Command("set");
+      RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
+      RequireOwner(Group = "Permission");
+      Summary("Sets a given user's sobriety date for given addiction to a date in the MM/DD/YYYY format.")>]
+    member this.Set(addiction: string, dateString, user): Task =
         try
             let soberDate = DateTime.Parse(dateString)
 
-            Database.setDate this.Context.Guild.Id user.Id user.Username soberDate
+            Database.setDate this.Context.Guild.Id user.Id user.Username soberDate addiction
             |> ignore
 
             this.ReplyAsync($"Sober date set to {soberDate.ToShortDateString()} for {user.Username}")
@@ -31,16 +42,28 @@ type SobrietyModule() =
     [<Command("reset");
       Alias("set");
       Summary("Resets your sobriety date to today.  Because of timezones, this might be different than the date where you are.")>]
-    member this.Reset(): Task = this.Reset(this.Context.User)
+    member this.Reset(): Task = this.Reset(this.Context.User :> IUser)
+
+    [<Command("reset");
+      Alias("set");
+      Summary("Resets your sobriety date to today for the given addiction.  Because of timezones, this might be different than the date where you are.")>]
+    member this.Reset(addiction): Task =
+        this.Reset(addiction, this.Context.User)
 
     [<Command("reset");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Resets a given user's sobriety date to today.")>]
-    member this.Reset(user): Task =
+    member this.Reset(user: IUser): Task = this.Reset("", user)
+
+    [<Command("reset");
+      RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
+      RequireOwner(Group = "Permission");
+      Summary("Resets a given user's sobriety date to today.")>]
+    member this.Reset(addiction, user: IUser): Task =
         let today = DateTime.Today
 
-        Database.setDate this.Context.Guild.Id user.Id user.Username today
+        Database.setDate this.Context.Guild.Id user.Id user.Username today addiction
         |> ignore
 
         this.ReplyAsync($"Sober date reset to {today.ToShortDateString()} for {user.Username}") :> Task
@@ -49,7 +72,7 @@ type SobrietyModule() =
         let today = DateTime.Today
 
         let sobrieties =
-            Database.getSobrieties this.Context.Guild.Id
+            Database.getServerSobrieties this.Context.Guild.Id
             |> sortBy orderBy
 
         let list =
@@ -60,8 +83,20 @@ type SobrietyModule() =
                         Math.Floor((today - s.SobrietyDate).TotalDays)
                         |> int
 
+                    let sobrietyTypeMessage =
+                        match s.Type with
+                        | "" -> ""
+                        | sobrietyType -> sprintf " from %s" sobrietyType
+
                     let number = if numbered then $"{i + 1}. " else ""
-                    sprintf "%s%s - %d day%s sober" number s.UserName soberDays (if soberDays = 1 then "" else "s"))
+
+                    sprintf
+                        "%s%s - %d day%s sober%s"
+                        number
+                        s.UserName
+                        soberDays
+                        (if soberDays = 1 then "" else "s")
+                        sobrietyTypeMessage)
 
         this.ReplyAsync(String.Join('\n', list)) :> Task
 
@@ -75,26 +110,43 @@ type SobrietyModule() =
     member this.Leaderboard(): Task =
         this.List((fun s -> s.SobrietyDate :> IComparable), true)
 
-    member this.Days(user: IUser, isSelf) =
+    member this.Days(user: IUser, isSelf, sobrietyType) =
         let today = DateTime.Today
 
-        match Database.getSobriety this.Context.Guild.Id user.Id with
+        match Database.getSobriety this.Context.Guild.Id user.Id sobrietyType with
         | None -> this.SendNoDateMessage(user, isSelf)
         | Some sobriety ->
             let soberDays =
                 Math.Floor((today - sobriety.SobrietyDate).TotalDays)
                 |> int
 
+            let sobrietyTypeMessage =
+                match sobriety.Type with
+                | "" -> ""
+                | sobrietyType -> sprintf " from %s" sobrietyType
+
             this.ReplyAsync(
-                sprintf "%s - %d day%s sober" sobriety.UserName soberDays (if soberDays = 1 then "" else "s")
+                sprintf
+                    "%s - %d day%s sober%s"
+                    sobriety.UserName
+                    soberDays
+                    (if soberDays = 1 then "" else "s")
+                    sobrietyTypeMessage
             )
         :> Task
 
     [<Command("days"); Summary("Shows how many days of sobriety you have.")>]
-    member this.Days(): Task = this.Days(this.Context.User, true)
+    member this.Days(): Task = this.Days(this.Context.User, true, "")
 
     [<Command("days"); Summary("Shows how many days of sobriety a given user has.")>]
-    member this.Days(user): Task = this.Days(user, false)
+    member this.Days(user): Task = this.Days(user, false, "")
+
+    [<Command("days"); Summary("Shows how many days of sobriety you have for the given addiction.")>]
+    member this.Days(addiction): Task =
+        this.Days(this.Context.User, true, addiction)
+
+    [<Command("days"); Summary("Shows how many days of sobriety a given user has for the given addiction.")>]
+    member this.Days(addiction: string, user: IUser): Task = this.Days(user, false, addiction)
 
     member this.SendNoDateMessage(user: IUser, isSelf) =
         this.ReplyAsync(
@@ -105,24 +157,38 @@ type SobrietyModule() =
                    "")
         )
 
-    member this.Date(user: IUser, isSelf) =
-        match Database.getSobriety this.Context.Guild.Id user.Id with
+    member this.Date(user: IUser, isSelf, sobrietyType) =
+        match Database.getSobriety this.Context.Guild.Id user.Id sobrietyType with
         | None -> this.SendNoDateMessage(user, isSelf)
         | Some sobriety ->
-            this.ReplyAsync($"{user.Username} has been sober since {sobriety.SobrietyDate.ToShortDateString()}")
+            this.ReplyAsync(
+                $"{user.Username} has been sober from {sobrietyType} since {sobriety.SobrietyDate.ToShortDateString()}"
+            )
+        :> Task
 
     [<Command("date"); Summary("Shows your sobriety date.")>]
-    member this.Date(): Task =
-        this.Date(this.Context.User, true) :> Task
+    member this.Date(): Task = this.Date(this.Context.User, true, "")
 
     [<Command("date"); Summary("Shows a given user's sobriety date.")>]
-    member this.Date(user: IUser): Task = this.Date(user, false) :> Task
+    member this.Date(user: IUser): Task = this.Date(user, false, "")
 
-    member this.Delete(user: IUser, isSelf) =
-        Database.removeSobriety this.Context.Guild.Id user.Id
+    [<Command("date"); Summary("Shows your sobriety date for the given addiction.")>]
+    member this.Date(addiction): Task =
+        this.Date(this.Context.User, true, addiction)
+
+    [<Command("date"); Summary("Shows a given user's sobriety date.")>]
+    member this.Date(addiction, user: IUser): Task = this.Date(user, false, addiction)
+
+    member this.Delete(user: IUser, isSelf, sobrietyType) =
+        Database.removeSobriety this.Context.Guild.Id user.Id sobrietyType
+
+        let sobrietyTypeMessage =
+            match sobrietyType with
+            | "" -> ""
+            | sobrietyType -> sprintf " for %s" sobrietyType
 
         this.ReplyAsync(
-            $"{user.Username} has been removed from the database."
+            $"{user.Username} has been removed from the database{sobrietyTypeMessage}."
             + (if isSelf then
                    "  Sorry to see you go :("
                else
@@ -133,14 +199,28 @@ type SobrietyModule() =
     [<Command("break");
       Alias("delete");
       Summary("Take a break from sobriety and remove yourself from the database. :(")>]
-    member this.Delete(): Task = this.Delete(this.Context.User, true)
+    member this.Delete(): Task =
+        this.Delete(this.Context.User, true, "")
+
+    [<Command("break");
+      Alias("delete");
+      Summary("Take a break from sobriety from given addiction and remove yourself from the database. :(")>]
+    member this.Delete(addiction): Task =
+        this.Delete(this.Context.User, true, addiction)
 
     [<Command("break");
       Alias("delete");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Remove a given user from the database.")>]
-    member this.Delete(user): Task = this.Delete(user, false)
+    member this.Delete(user): Task = this.Delete(user, false, "")
+
+    [<Command("break");
+      Alias("delete");
+      RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
+      RequireOwner(Group = "Permission");
+      Summary("Remove a given user from the database.")>]
+    member this.Delete(addiction, user): Task = this.Delete(user, false, addiction)
 
     [<Command("milestones on"); Summary("Enable milestone notifications.")>]
     member this.MilestonesOn(): Task =

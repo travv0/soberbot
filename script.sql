@@ -22,3 +22,5 @@ CREATE TABLE "Sobrieties" (
     "SobrietyDate" TEXT NOT NULL,
     "ActiveDate" TEXT NOT NULL
 , "LastMilestoneDays" INTEGER NOT NULL DEFAULT 0, "MilestonesEnabled" INTEGER NOT NULL DEFAULT 1);
+ALTER TABLE "Sobrieties"
+ADD "Type" TEXT NOT NULL DEFAULT '';

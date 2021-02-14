@@ -32,33 +32,43 @@ let messageReceived (rawMessage: SocketMessage): Task =
                 let context =
                     SocketCommandContext(Services.discord, message)
 
-                Database.updateActiveDate context.Guild.Id message.Author.Id
+                Database.updateActiveDates context.Guild.Id message.Author.Id
 
                 if not isCommand then
-                    match Database.getNewMilestoneName context.Guild.Id message.Author.Id with
-                    | Some milestoneName ->
+                    match Database.getNewMilestoneNames context.Guild.Id message.Author.Id with
+                    | [] -> ()
+                    | milestoneNames ->
                         let milestoneChannel =
                             Database.getMilestoneChannel context.Guild.Id
                             |> Option.defaultValue 0UL
 
-                        let milestoneMessage =
-                            $"<@{message.Author.Id}> has reached a new milestone: **{milestoneName}**"
+                        for (sobrietyType, milestoneName) in milestoneNames do
+                            let sobrietyTypeMessage =
+                                match sobrietyType with
+                                | "" -> ""
+                                | sobrietyType -> sprintf " for %s" sobrietyType
 
-                        if (milestoneChannel > 0UL) then
-                            do!
-                                context
-                                    .Guild
-                                    .GetTextChannel(milestoneChannel)
-                                    .SendMessageAsync(milestoneMessage)
-                                |> Async.AwaitTask
-                                |> Async.Ignore
-                        else
-                            do!
-                                (context.Channel :?> SocketTextChannel)
-                                    .SendMessageAsync(milestoneMessage)
-                                |> Async.AwaitTask
-                                |> Async.Ignore
-                    | None -> ()
+                            let milestoneMessage =
+                                sprintf
+                                    "<@%d> has reached a new milestone%s: **%s**"
+                                    message.Author.Id
+                                    sobrietyTypeMessage
+                                    milestoneName
+
+                            if (milestoneChannel > 0UL) then
+                                do!
+                                    context
+                                        .Guild
+                                        .GetTextChannel(milestoneChannel)
+                                        .SendMessageAsync(milestoneMessage)
+                                    |> Async.AwaitTask
+                                    |> Async.Ignore
+                            else
+                                do!
+                                    (context.Channel :?> SocketTextChannel)
+                                        .SendMessageAsync(milestoneMessage)
+                                    |> Async.AwaitTask
+                                    |> Async.Ignore
                 else
                     match Database.getBanMessage context.Guild.Id message.Author.Id with
                     | Some banMessage ->
