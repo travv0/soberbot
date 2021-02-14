@@ -161,8 +161,13 @@ type SobrietyModule() =
         match Database.getSobriety this.Context.Guild.Id user.Id sobrietyType with
         | None -> this.SendNoDateMessage(user, isSelf)
         | Some sobriety ->
+            let sobrietyTypeMessage =
+                match sobrietyType with
+                | "" -> ""
+                | sobrietyType -> sprintf " from %s" sobrietyType
+
             this.ReplyAsync(
-                $"{user.Username} has been sober from {sobrietyType} since {sobriety.SobrietyDate.ToShortDateString()}"
+                $"{user.Username} has been sober{sobrietyTypeMessage} since {sobriety.SobrietyDate.ToShortDateString()}"
             )
         :> Task
 
