@@ -7,15 +7,20 @@ open System
 
 let soberContext = new SoberContext()
 
+let inline detach e =
+    map
+        (fun a ->
+            soberContext.Entry(a).State <- EntityState.Detached
+            a)
+        e
+
 let getServerSobrieties serverId =
     query {
         for sobriety in soberContext.Sobrieties do
             where (sobriety.ServerID = serverId)
     }
-    |> Seq.map
-        (fun s ->
-            soberContext.Entry(s).State <- EntityState.Detached
-            s)
+    |> toSeq
+    |> detach
 
 let getSobrieties serverId userId =
     query {
@@ -25,10 +30,8 @@ let getSobrieties serverId userId =
                 && sobriety.UserID = userId
             )
     }
-    |> Seq.map
-        (fun s ->
-            soberContext.Entry(s).State <- EntityState.Detached
-            s)
+    |> toSeq
+    |> detach
 
 let getSobriety serverId userId sobrietyType: Sobriety option =
     query {
@@ -40,10 +43,7 @@ let getSobriety serverId userId sobrietyType: Sobriety option =
             )
     }
     |> tryHead
-    |> map
-        (fun s ->
-            soberContext.Entry(s).State <- EntityState.Detached
-            s)
+    |> detach
 
 let setDate serverId userId userName (soberDate: DateTime) sobrietyType =
     let lastMilestoneDays =
@@ -102,10 +102,7 @@ let getConfig serverId: Config option =
             where (config.ServerID = serverId)
     }
     |> tryHead
-    |> map
-        (fun c ->
-            soberContext.Entry(c).State <- EntityState.Detached
-            c)
+    |> detach
 
 let pruneInactiveUsers serverId =
     let pruneDays =
@@ -142,10 +139,7 @@ let getBan serverId userId =
             where (ban.ServerID = serverId && ban.UserID = userId)
     }
     |> tryHead
-    |> map
-        (fun b ->
-            soberContext.Entry(b).State <- EntityState.Detached
-            b)
+    |> detach
 
 let banUser serverId userId message =
     match getBan serverId userId with
@@ -177,11 +171,7 @@ let getBanMessage serverId userId =
     |> map (fun ban -> ban.Message)
 
 let getMilestones () =
-    soberContext.Milestones
-    |> Seq.map
-        (fun m ->
-            soberContext.Entry(m).State <- EntityState.Detached
-            m)
+    soberContext.Milestones |> toSeq |> detach
 
 let getNewMilestoneNames serverId userId: (string * string) list =
     match getSobrieties serverId userId |> toList with
