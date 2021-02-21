@@ -2,7 +2,6 @@ namespace SoberBot.Modules
 
 open Discord
 open Discord.Commands
-open FSharpPlus
 open Models
 open System
 open System.Threading.Tasks
@@ -90,7 +89,7 @@ type SobrietyModule() =
 
         let list =
             sobrieties
-            |> mapi
+            |> Seq.mapi
                 (fun i s ->
                     let soberDays =
                         Math.Floor((today - s.SobrietyDate).TotalDays)

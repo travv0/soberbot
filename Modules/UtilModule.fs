@@ -1,7 +1,6 @@
 namespace SoberBot.Modules
 
 open Discord.Commands
-open FSharpPlus
 open System
 open System.Threading.Tasks
 
@@ -13,13 +12,12 @@ type UtilModule() =
             String.Join(
                 ' ',
                 command.Aliases
-                |> toSeq
-                |> filter ((<>) command.Name)
-                |> map (fun a -> sprintf "%s" (String.Join(", ", a)))
+                |> Seq.filter ((<>) command.Name)
+                |> Seq.map (fun a -> sprintf "%s" (String.Join(", ", a)))
             )
 
         let aliasString =
-            if command.Aliases |> exists ((<>) command.Name) then
+            if command.Aliases |> Seq.contains command.Name then
                 $" (Aliases: {aliases})"
             else
                 ""
@@ -45,12 +43,12 @@ type UtilModule() =
     member this.Help(): Task =
         let commands =
             Services.commands.Commands
-            |> filter
+            |> Seq.filter
                 (fun c ->
                     not (String.IsNullOrEmpty(c.Summary))
                     && not (
                         c.Preconditions
-                        |> exists (fun p -> p.Group = "Permission")
+                        |> Seq.exists (fun p -> p.Group = "Permission")
                     ))
 
         let embedBuilder =
@@ -93,11 +91,11 @@ type UtilModule() =
 
             let adminCommands =
                 Services.commands.Commands
-                |> filter
+                |> Seq.filter
                     (fun c ->
                         not (String.IsNullOrEmpty(c.Summary))
                         && c.Preconditions
-                           |> exists (fun p -> p.Group = "Permission"))
+                           |> Seq.exists (fun p -> p.Group = "Permission"))
 
             for command in adminCommands do
                 let embedFieldBuilder =

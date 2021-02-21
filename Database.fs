@@ -1,26 +1,29 @@
 module Database
 
-open FSharpPlus
 open Microsoft.EntityFrameworkCore
 open Models
 open System
 
 let soberContext = new SoberContext()
 
-let inline detach e =
-    map
-        (fun a ->
-            soberContext.Entry(a).State <- EntityState.Detached
-            a)
-        e
+let detach e =
+    soberContext.Entry(e).State <- EntityState.Detached
+    e
+
+[<RequireQualifiedAccess>]
+module Option =
+    let detach e = Option.map detach e
+
+[<RequireQualifiedAccess>]
+module Seq =
+    let detach e = Seq.map detach e
 
 let getServerSobrieties serverId =
     query {
         for sobriety in soberContext.Sobrieties do
             where (sobriety.ServerID = serverId)
     }
-    |> toSeq
-    |> detach
+    |> Seq.detach
 
 let getSobrieties serverId userId =
     query {
@@ -30,8 +33,7 @@ let getSobrieties serverId userId =
                 && sobriety.UserID = userId
             )
     }
-    |> toSeq
-    |> detach
+    |> Seq.detach
 
 let getSobriety serverId userId sobrietyType: Sobriety option =
     query {
@@ -42,8 +44,8 @@ let getSobriety serverId userId sobrietyType: Sobriety option =
                 && sobriety.Type = sobrietyType
             )
     }
-    |> tryHead
-    |> detach
+    |> Seq.tryHead
+    |> Option.detach
 
 let setDate serverId userId userName (soberDate: DateTime) sobrietyType =
     let lastMilestoneDays =
@@ -84,7 +86,7 @@ let removeSobriety serverId userId sobrietyType =
     | None -> ()
 
 let updateActiveDates serverId userId =
-    match getSobrieties serverId userId |> toList with
+    match getSobrieties serverId userId |> List.ofSeq with
     | [] -> ()
     | sobrieties ->
         for sobriety in sobrieties do
@@ -101,8 +103,8 @@ let getConfig serverId: Config option =
         for config in soberContext.Config do
             where (config.ServerID = serverId)
     }
-    |> tryHead
-    |> detach
+    |> Seq.tryHead
+    |> Option.detach
 
 let pruneInactiveUsers serverId =
     let pruneDays =
@@ -138,8 +140,8 @@ let getBan serverId userId =
         for ban in soberContext.Bans do
             where (ban.ServerID = serverId && ban.UserID = userId)
     }
-    |> tryHead
-    |> detach
+    |> Seq.tryHead
+    |> Option.detach
 
 let banUser serverId userId message =
     match getBan serverId userId with
@@ -168,13 +170,12 @@ let unbanUser serverId userId =
 
 let getBanMessage serverId userId =
     getBan serverId userId
-    |> map (fun ban -> ban.Message)
+    |> Option.map (fun ban -> ban.Message)
 
-let getMilestones () =
-    soberContext.Milestones |> toSeq |> detach
+let getMilestones () = soberContext.Milestones |> Seq.detach
 
 let getNewMilestoneNames serverId userId: (string * string) list =
-    match getSobrieties serverId userId |> toList with
+    match getSobrieties serverId userId |> List.ofSeq with
     | [] -> []
     | sobrieties ->
         [ for sobriety in sobrieties do
@@ -182,7 +183,7 @@ let getNewMilestoneNames serverId userId: (string * string) list =
                   let milestone =
                       getMilestones ()
                       |> Seq.sortByDescending (fun m -> m.Days)
-                      |> tryFind
+                      |> Seq.tryFind
                           (fun m ->
                               m.Days > sobriety.LastMilestoneDays
                               && (DateTime.Today - sobriety.SobrietyDate).TotalDays
@@ -226,7 +227,7 @@ let getMilestoneChannel serverId =
     |> Option.map (fun config -> config.MilestoneChannelID)
 
 let enableMilestones serverId userId =
-    match getSobrieties serverId userId |> toList with
+    match getSobrieties serverId userId |> List.ofSeq with
     | [] -> ()
     | sobrieties ->
         for sobriety in sobrieties do
@@ -239,7 +240,7 @@ let enableMilestones serverId userId =
         soberContext.SaveChanges() |> ignore
 
 let disableMilestones serverId userId =
-    match getSobrieties serverId userId |> toList with
+    match getSobrieties serverId userId |> List.ofSeq with
     | [] -> ()
     | sobrieties ->
         for sobriety in sobrieties do
