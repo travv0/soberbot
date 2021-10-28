@@ -1,3 +1,5 @@
+module Program
+
 open Discord
 open System.Threading.Tasks
 

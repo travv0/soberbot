@@ -79,6 +79,12 @@ type SobrietyModule() =
         this.ReplyAsync($"Sober date reset to {today.ToShortDateString()}{sobrietyTypeMessage} for {user.Username}")
         :> Task
 
+    member this.Reply(message) =
+        this.ReplyAsync(message)
+        |> Async.AwaitTask
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
     member this.List(orderBy: Sobriety -> #IComparable, numbered: bool) =
         let today = DateTime.Today
 
@@ -110,7 +116,16 @@ type SobrietyModule() =
                     (if soberDays = 1 then "" else "s")
                     sobrietyTypeMessage)
 
-        this.ReplyAsync(String.Join('\n', list)) :> Task
+        let mutable output = ""
+
+        for line in list do
+            if String.length output + String.length line > 2000 then
+                this.Reply(output)
+                output <- "\n" + line
+            else
+                output <- output + "\n" + line
+
+        this.ReplyAsync(output) :> Task
 
     [<Command("list");
       Summary("Lists all users on the server ordered by user name and how many days of sobriety they have.")>]
