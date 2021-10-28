@@ -19,7 +19,7 @@ let log (msg: LogMessage) =
     printfn "%s" <| msg.ToString()
     Task.CompletedTask
 
-let messageReceived (rawMessage: SocketMessage): Task =
+let messageReceived (rawMessage: SocketMessage) : Task =
     async {
         match rawMessage with
         | :? SocketUserMessage as message ->

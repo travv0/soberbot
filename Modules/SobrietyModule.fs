@@ -10,24 +10,24 @@ type SobrietyModule() =
     inherit ModuleBase<SocketCommandContext>()
 
     [<Command("set"); Summary("Sets your sobriety date to a date in the MM/DD/YYYY format.")>]
-    member this.Set(dateString): Task =
+    member this.Set(dateString) : Task =
         this.Set("", dateString, this.Context.User)
 
     [<Command("set");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Sets a given user's sobriety date to a date in the MM/DD/YYYY format.")>]
-    member this.Set(dateString, user): Task = this.Set("", dateString, user)
+    member this.Set(dateString, user) : Task = this.Set("", dateString, user)
 
     [<Command("set"); Summary("Sets your sobriety date for the given addiction to a date in the MM/DD/YYYY format.")>]
-    member this.Set(addiction, dateString): Task =
+    member this.Set(addiction, dateString) : Task =
         this.Set(addiction, dateString, this.Context.User)
 
     [<Command("set");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Sets a given user's sobriety date for given addiction to a date in the MM/DD/YYYY format.")>]
-    member this.Set(addiction: string, dateString, user): Task =
+    member this.Set(addiction: string, dateString, user) : Task =
         try
             let soberDate = DateTime.Parse(dateString)
 
@@ -42,29 +42,30 @@ type SobrietyModule() =
             this.ReplyAsync(
                 $"Sober date set to {soberDate.ToShortDateString()}{sobrietyTypeMessage} for {user.Username}"
             )
-        with _ -> this.ReplyAsync($"Please enter date in MM/DD/YYYY format")
+        with
+        | _ -> this.ReplyAsync($"Please enter date in MM/DD/YYYY format")
         :> Task
 
     [<Command("reset");
       Summary("Resets your sobriety date to today.  Because of timezones, this might be different than the date where you are.")>]
-    member this.Reset(): Task = this.Reset(this.Context.User :> IUser)
+    member this.Reset() : Task = this.Reset(this.Context.User :> IUser)
 
     [<Command("reset");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Resets a given user's sobriety date to today.")>]
-    member this.Reset(user: IUser): Task = this.Reset("", user)
+    member this.Reset(user: IUser) : Task = this.Reset("", user)
 
     [<Command("reset");
       Summary("Resets your sobriety date to today for the given addiction.  Because of timezones, this might be different than the date where you are.")>]
-    member this.Reset(addiction): Task =
+    member this.Reset(addiction) : Task =
         this.Reset(addiction, this.Context.User)
 
     [<Command("reset");
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Resets a given user's sobriety date to today for the given addiction.")>]
-    member this.Reset(addiction, user: IUser): Task =
+    member this.Reset(addiction, user: IUser) : Task =
         let today = DateTime.Today
 
         Database.setDate this.Context.Guild.Id user.Id user.Username today addiction
@@ -89,36 +90,35 @@ type SobrietyModule() =
 
         let list =
             sobrieties
-            |> Seq.mapi
-                (fun i s ->
-                    let soberDays =
-                        Math.Floor((today - s.SobrietyDate).TotalDays)
-                        |> int
+            |> Seq.mapi (fun i s ->
+                let soberDays =
+                    Math.Floor((today - s.SobrietyDate).TotalDays)
+                    |> int
 
-                    let sobrietyTypeMessage =
-                        match s.Type with
-                        | "" -> ""
-                        | sobrietyType -> sprintf " from %s" sobrietyType
+                let sobrietyTypeMessage =
+                    match s.Type with
+                    | "" -> ""
+                    | sobrietyType -> sprintf " from %s" sobrietyType
 
-                    let number = if numbered then $"{i + 1}. " else ""
+                let number = if numbered then $"{i + 1}. " else ""
 
-                    sprintf
-                        "%s%s - %d day%s sober%s"
-                        number
-                        s.UserName
-                        soberDays
-                        (if soberDays = 1 then "" else "s")
-                        sobrietyTypeMessage)
+                sprintf
+                    "%s%s - %d day%s sober%s"
+                    number
+                    s.UserName
+                    soberDays
+                    (if soberDays = 1 then "" else "s")
+                    sobrietyTypeMessage)
 
         this.ReplyAsync(String.Join('\n', list)) :> Task
 
     [<Command("list");
       Summary("Lists all users on the server ordered by user name and how many days of sobriety they have.")>]
-    member this.List(): Task = this.List((fun s -> s.UserName), false)
+    member this.List() : Task = this.List((fun s -> s.UserName), false)
 
     [<Command("leaderboard");
       Summary("Lists all users on the server ordered by sober time and how many days of sobriety they have.")>]
-    member this.Leaderboard(): Task =
+    member this.Leaderboard() : Task =
         this.List((fun s -> s.SobrietyDate), true)
 
     member this.Days(user: IUser, isSelf, sobrietyType) =
@@ -147,17 +147,17 @@ type SobrietyModule() =
         :> Task
 
     [<Command("days"); Summary("Shows how many days of sobriety you have.")>]
-    member this.Days(): Task = this.Days(this.Context.User, true, "")
+    member this.Days() : Task = this.Days(this.Context.User, true, "")
 
     [<Command("days"); Summary("Shows how many days of sobriety a given user has.")>]
-    member this.Days(user): Task = this.Days(user, false, "")
+    member this.Days(user) : Task = this.Days(user, false, "")
 
     [<Command("days"); Summary("Shows how many days of sobriety you have for the given addiction.")>]
-    member this.Days(addiction): Task =
+    member this.Days(addiction) : Task =
         this.Days(this.Context.User, true, addiction)
 
     [<Command("days"); Summary("Shows how many days of sobriety a given user has for the given addiction.")>]
-    member this.Days(addiction: string, user: IUser): Task = this.Days(user, false, addiction)
+    member this.Days(addiction: string, user: IUser) : Task = this.Days(user, false, addiction)
 
     member this.SendNoDateMessage(user: IUser, isSelf) =
         this.ReplyAsync(
@@ -183,17 +183,17 @@ type SobrietyModule() =
         :> Task
 
     [<Command("date"); Summary("Shows your sobriety date.")>]
-    member this.Date(): Task = this.Date(this.Context.User, true, "")
+    member this.Date() : Task = this.Date(this.Context.User, true, "")
 
     [<Command("date"); Summary("Shows a given user's sobriety date.")>]
-    member this.Date(user: IUser): Task = this.Date(user, false, "")
+    member this.Date(user: IUser) : Task = this.Date(user, false, "")
 
     [<Command("date"); Summary("Shows your sobriety date for the given addiction.")>]
-    member this.Date(addiction): Task =
+    member this.Date(addiction) : Task =
         this.Date(this.Context.User, true, addiction)
 
     [<Command("date"); Summary("Shows a given user's sobriety date for the given addiction.")>]
-    member this.Date(addiction, user: IUser): Task = this.Date(user, false, addiction)
+    member this.Date(addiction, user: IUser) : Task = this.Date(user, false, addiction)
 
     member this.Delete(user: IUser, isSelf, sobrietyType) =
         Database.removeSobriety this.Context.Guild.Id user.Id sobrietyType
@@ -215,7 +215,7 @@ type SobrietyModule() =
     [<Command("break");
       Alias("delete");
       Summary("Take a break from sobriety and remove yourself from the database. :(")>]
-    member this.Delete(): Task =
+    member this.Delete() : Task =
         this.Delete(this.Context.User, true, "")
 
     [<Command("break");
@@ -223,12 +223,12 @@ type SobrietyModule() =
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Remove a given user from the database.")>]
-    member this.Delete(user): Task = this.Delete(user, false, "")
+    member this.Delete(user) : Task = this.Delete(user, false, "")
 
     [<Command("break");
       Alias("delete");
       Summary("Take a break from sobriety from the given addiction and remove yourself from the database. :(")>]
-    member this.Delete(addiction): Task =
+    member this.Delete(addiction) : Task =
         this.Delete(this.Context.User, true, addiction)
 
     [<Command("break");
@@ -236,15 +236,15 @@ type SobrietyModule() =
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Remove a given user from the database for the given addiction.")>]
-    member this.Delete(addiction, user): Task = this.Delete(user, false, addiction)
+    member this.Delete(addiction, user) : Task = this.Delete(user, false, addiction)
 
     [<Command("milestones on"); Summary("Enable milestone notifications.")>]
-    member this.MilestonesOn(): Task =
+    member this.MilestonesOn() : Task =
         Database.enableMilestones this.Context.Guild.Id this.Context.User.Id
         this.ReplyAsync($"Milestones enabled for {this.Context.User.Username}.") :> Task
 
     [<Command("milestones off"); Summary("Disable milestone notifications.")>]
-    member this.MilestonesOff(): Task =
+    member this.MilestonesOff() : Task =
         Database.disableMilestones this.Context.Guild.Id this.Context.User.Id
         this.ReplyAsync($"Milestones disabled for {this.Context.User.Username}.") :> Task
 
@@ -252,7 +252,7 @@ type SobrietyModule() =
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Sets the number of days of inactivity before users are pruned from the database.")>]
-    member this.ConfigPrunedays(days): Task =
+    member this.ConfigPrunedays(days) : Task =
         Database.setPruneDays this.Context.Guild.Id days
         |> ignore
 
@@ -262,7 +262,7 @@ type SobrietyModule() =
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Sets the channel that milestone notifications are sent to.  By default, notifications will be sent to last channel user is active in.")>]
-    member this.ConfigMilestonechannel(channel: IChannel): Task =
+    member this.ConfigMilestonechannel(channel: IChannel) : Task =
         Database.setMilestoneChannel this.Context.Guild.Id channel.Id
         |> ignore
 
@@ -272,7 +272,7 @@ type SobrietyModule() =
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Sets milestone notifications to be sent to last channel user is active in.")>]
-    member this.ConfigUnsetMilestonechannel(): Task =
+    member this.ConfigUnsetMilestonechannel() : Task =
         Database.setMilestoneChannel this.Context.Guild.Id 0UL
         |> ignore
 
@@ -282,7 +282,7 @@ type SobrietyModule() =
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Removes user from database and no longer allows them to user the bot.  Replies with given message instead.")>]
-    member this.Ban(user: IUser, message): Task =
+    member this.Ban(user: IUser, message) : Task =
         Database.banUser this.Context.Guild.Id user.Id message
         |> ignore
 
@@ -292,6 +292,6 @@ type SobrietyModule() =
       RequireUserPermission(GuildPermission.Administrator, Group = "Permission");
       RequireOwner(Group = "Permission");
       Summary("Allow banned user to use the bot once again.")>]
-    member this.Unban(user: IUser): Task =
+    member this.Unban(user: IUser) : Task =
         Database.unbanUser this.Context.Guild.Id user.Id
         this.ReplyAsync($"{user.Username} has been unbanned.") :> Task

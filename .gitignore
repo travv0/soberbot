@@ -333,3 +333,4 @@ ASALocalRun/
 config.json
 .DS_Store
 DiscordBot.sln
+references.fsx

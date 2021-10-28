@@ -40,16 +40,15 @@ type UtilModule() =
             parameters
 
     [<Command("help"); Summary("Shows this command list.")>]
-    member this.Help(): Task =
+    member this.Help() : Task =
         let commands =
             Services.commands.Commands
-            |> Seq.filter
-                (fun c ->
-                    not (String.IsNullOrEmpty(c.Summary))
-                    && not (
-                        c.Preconditions
-                        |> Seq.exists (fun p -> p.Group = "Permission")
-                    ))
+            |> Seq.filter (fun c ->
+                not (String.IsNullOrEmpty(c.Summary))
+                && not (
+                    c.Preconditions
+                    |> Seq.exists (fun p -> p.Group = "Permission")
+                ))
 
         let embedBuilder =
             Discord.EmbedBuilder().WithTitle("Commands")
@@ -66,11 +65,13 @@ type UtilModule() =
 
 
         embedBuilder
-            .WithDescription("To use the bot, tag it and specify one of the commands shown below.  "
-                             + "Replace the parts of commands surrounded by <> with your own text.\n"
-                             + "**Example:** "
-                             + Services.discord.CurrentUser.Mention
-                             + " set 3/31/2020")
+            .WithDescription(
+                "To use the bot, tag it and specify one of the commands shown below.  "
+                + "Replace the parts of commands surrounded by <> with your own text.\n"
+                + "**Example:** "
+                + Services.discord.CurrentUser.Mention
+                + " set 3/31/2020"
+            )
             .WithFooter(
                 "Source code can be found at https://github.com/travv0/soberbot\n"
                 + "Please report any bugs at https://github.com/travv0/soberbot/issues"
@@ -91,11 +92,10 @@ type UtilModule() =
 
             let adminCommands =
                 Services.commands.Commands
-                |> Seq.filter
-                    (fun c ->
-                        not (String.IsNullOrEmpty(c.Summary))
-                        && c.Preconditions
-                           |> Seq.exists (fun p -> p.Group = "Permission"))
+                |> Seq.filter (fun c ->
+                    not (String.IsNullOrEmpty(c.Summary))
+                    && c.Preconditions
+                       |> Seq.exists (fun p -> p.Group = "Permission"))
 
             for command in adminCommands do
                 let embedFieldBuilder =
