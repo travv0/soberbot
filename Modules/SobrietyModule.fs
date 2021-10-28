@@ -116,16 +116,19 @@ type SobrietyModule() =
                     (if soberDays = 1 then "" else "s")
                     sobrietyTypeMessage)
 
-        let mutable output = ""
+        match List.ofSeq list with
+        | o :: list ->
+            let mutable output = o
 
-        for line in list do
-            if String.length output + String.length line > 2000 then
-                this.Reply(output)
-                output <- "\n" + line
-            else
-                output <- output + "\n" + line
+            for line in list do
+                if String.length output + String.length line > 2000 then
+                    this.Reply(output)
+                    output <- line
+                else
+                    output <- output + "\n" + line
 
-        this.ReplyAsync(output) :> Task
+            this.ReplyAsync(output) :> Task
+        | [] -> Task.CompletedTask
 
     [<Command("list");
       Summary("Lists all users on the server ordered by user name and how many days of sobriety they have.")>]
