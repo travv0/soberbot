@@ -2,6 +2,7 @@ namespace SoberBot.Modules
 
 open Discord
 open Discord.Commands
+open Extensions
 open Models
 open System
 open System.Threading.Tasks
@@ -78,12 +79,6 @@ type SobrietyModule() =
 
         this.ReplyAsync($"Sober date reset to {today.ToShortDateString()}{sobrietyTypeMessage} for {user.Username}")
         :> Task
-
-    member this.Reply(message) =
-        this.ReplyAsync(message)
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
 
     member this.List(orderBy: Sobriety -> #IComparable, numbered: bool) =
         let today = DateTime.Today

@@ -1,6 +1,7 @@
 namespace SoberBot.Modules
 
 open Discord.Commands
+open Extensions
 open System
 open System.Threading.Tasks
 
@@ -17,10 +18,10 @@ type UtilModule() =
             )
 
         let aliasString =
-            if command.Aliases |> Seq.contains command.Name then
-                $" (Aliases: {aliases})"
-            else
+            if String.IsNullOrWhiteSpace(aliases) then
                 ""
+            else
+                $" (Aliases: {aliases})"
 
         let parameters =
             String.Join(
@@ -78,10 +79,7 @@ type UtilModule() =
             )
         |> ignore
 
-        this.ReplyAsync(null, false, embedBuilder.Build())
-        |> Async.AwaitTask
-        |> Async.Ignore
-        |> Async.RunSynchronously
+        this.Reply(embed = embedBuilder.Build())
 
         let isAdmin =
             this.Context.User.Id = this.Context.Guild.OwnerId

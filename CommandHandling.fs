@@ -11,7 +11,7 @@ let log (msg: LogMessage) =
     // Return an error message for async commands
     match msg.Exception with
     | :? CommandException as command ->
-        // Don't risk blocking the logging task by awaiting a message send ratelimits!?
+        // Don't risk blocking the logging task by awaiting a message send rate limits!?
         command.Context.Channel.SendMessageAsync($"Error: {command.Message}")
         |> ignore
     | _ -> ()
@@ -20,7 +20,7 @@ let log (msg: LogMessage) =
     Task.CompletedTask
 
 let messageReceived (rawMessage: SocketMessage) : Task =
-    async {
+    task {
         match rawMessage with
         | :? SocketUserMessage as message ->
             if (message.Source = MessageSource.User) then
@@ -42,7 +42,7 @@ let messageReceived (rawMessage: SocketMessage) : Task =
                             Database.getMilestoneChannel context.Guild.Id
                             |> Option.defaultValue 0UL
 
-                        for (sobrietyType, milestoneName) in milestoneNames do
+                        for sobrietyType, milestoneName in milestoneNames do
                             let sobrietyTypeMessage =
                                 match sobrietyType with
                                 | "" -> ""
@@ -61,22 +61,19 @@ let messageReceived (rawMessage: SocketMessage) : Task =
                                         .Guild
                                         .GetTextChannel(milestoneChannel)
                                         .SendMessageAsync(milestoneMessage)
-                                    |> Async.AwaitTask
-                                    |> Async.Ignore
+                                    :> Task
                             else
                                 do!
                                     (context.Channel :?> SocketTextChannel)
                                         .SendMessageAsync(milestoneMessage)
-                                    |> Async.AwaitTask
-                                    |> Async.Ignore
+                                    :> Task
                 else
                     match Database.getBanMessage context.Guild.Id message.Author.Id with
                     | Some banMessage ->
                         do!
                             (context.Channel :?> SocketTextChannel)
                                 .SendMessageAsync($"<@{message.Author.Id}> {banMessage}")
-                            |> Async.AwaitTask
-                            |> Async.Ignore
+                            :> Task
                     | None ->
                         Database.pruneInactiveUsers context.Guild.Id
                         |> ignore
@@ -84,9 +81,7 @@ let messageReceived (rawMessage: SocketMessage) : Task =
                         while (message.Content.[argPos] = ' ') do
                             argPos <- argPos + 1
 
-                        let! result =
-                            Services.commands.ExecuteAsync(context, argPos, Services.provider)
-                            |> Async.AwaitTask
+                        let! result = Services.commands.ExecuteAsync(context, argPos, Services.provider)
 
                         if result.Error = Nullable(CommandError.UnknownCommand) then
                             do!
@@ -97,26 +92,18 @@ let messageReceived (rawMessage: SocketMessage) : Task =
                                                 "Unknown command: %s"
                                                 (message.Content.Substring(message.Content.IndexOf('>') + 2))
                                     )
-                                |> Async.AwaitTask
-                                |> Async.Ignore
-                        elif (result.Error.HasValue) then
+                                :> Task
+                        elif result.Error.HasValue then
                             do!
                                 (context.Channel :?> SocketTextChannel)
                                     .SendMessageAsync(result.ToString())
-                                |> Async.AwaitTask
-                                |> Async.Ignore
+                                :> Task
         | _ -> ()
     }
-    |> Async.RunSynchronously
 
-    Task.CompletedTask
-
-let initializeAsync (provider) =
-    async {
-        do!
-            Services.commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider)
-            |> Async.AwaitTask
-            |> Async.Ignore
+let initialize provider =
+    task {
+        do! Services.commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider) :> Task
 
         Func<_, _>(messageReceived)
         |> Services.discord.add_MessageReceived
